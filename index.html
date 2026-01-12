@@ -9,18 +9,37 @@
 <body>
   <main class="container">
     <header class="header">
-      <a class="brand" href="https://dev.dormatec.eu/#" target="_blank" rel="noopener">
-        <!-- Zorg dat je logo.svg in dezelfde map staat als index.html -->
-        <img class="brand-logo" src="logo.svg" alt="Dormatec logo" />
-        <div class="brand-text">
-          <h1>Dormatec</h1>
-          <p class="sub">Takenlijst (lokaal opgeslagen in je browser)</p>
-        </div>
-      </a>
+      <h1>Dormatec</h1>
+      <p class="sub">Beveiligde takenlijst</p>
     </header>
 
-    <section class="card">
-      <form id="taskForm" class="row">
+    <!-- LOGIN -->
+    <section id="loginCard" class="card">
+      <h2 class="h2">Inloggen</h2>
+      <form id="loginForm" class="row-col">
+        <label class="label">
+          E-mail
+          <input id="emailInput" type="email" placeholder="naam@bedrijf.nl" autocomplete="username" required />
+        </label>
+
+        <label class="label">
+          Wachtwoord
+          <input id="passwordInput" type="password" placeholder="••••••••" autocomplete="current-password" required />
+        </label>
+
+        <button class="btn btn-primary" type="submit">Inloggen</button>
+        <p id="loginError" class="error" aria-live="polite"></p>
+      </form>
+    </section>
+
+    <!-- APP (alleen zichtbaar na login) -->
+    <section id="appCard" class="card hidden">
+      <div class="row row-between">
+        <div class="muted" id="userInfo">Ingelogd</div>
+        <button id="logoutBtn" class="btn btn-ghost" type="button">Uitloggen</button>
+      </div>
+
+      <form id="taskForm" class="row" style="margin-top:12px;">
         <input id="taskInput" type="text" placeholder="Nieuwe taak..." autocomplete="off" />
         <button type="submit" class="btn btn-primary">Toevoegen</button>
       </form>
@@ -40,10 +59,11 @@
     </section>
 
     <footer class="footer">
-      <small>Deploy via GitHub Pages 🚀</small>
+      <small>Alleen toegankelijk met account</small>
     </footer>
   </main>
 
-  <script src="app.js"></script>
+  <!-- Firebase imports werken als module -->
+  <script type="module" src="app.js"></script>
 </body>
 </html>

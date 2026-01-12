@@ -1,28 +1,19 @@
-/* =========================
-   Dormatec Theme (pas hier je exacte kleuren aan)
-   ========================= */
 :root{
   --bg-0:#071428;
   --bg-1:#0b2b52;
-
   --surface: rgba(255,255,255,0.06);
   --surface-2: rgba(0,0,0,0.18);
   --border: rgba(255,255,255,0.12);
-
   --text:#eef3fb;
   --muted:#b6c6de;
 
-  /* Dormatec-blauw (vervang eventueel met exact blauw uit je site) */
   --brand:#0e5aa7;
   --brand-2:#2aa7ff;
 
-  --danger:#ff5a67;
   --shadow: 0 16px 50px rgba(0,0,0,.45);
+  --danger:#ff5a67;
 }
 
-/* =========================
-   Base
-   ========================= */
 *{ box-sizing:border-box; }
 body{
   margin:0;
@@ -34,60 +25,12 @@ body{
   min-height:100vh;
 }
 
-.container{
-  max-width: 760px;
-  margin: 0 auto;
-  padding: 28px 16px 60px;
-}
+.container{ max-width:760px; margin:0 auto; padding:28px 16px 60px; }
+.header h1{ margin:0 0 6px; font-size:32px; }
+.sub{ margin:0; color:var(--muted); }
 
-/* =========================
-   Header / Brand
-   ========================= */
-.header{
-  margin-bottom: 14px;
-}
-
-.brand{
-  display:flex;
-  align-items:center;
-  gap:14px;
-  text-decoration:none;
-  color:inherit;
-  padding: 14px 14px;
-  border-radius: 18px;
-  background: rgba(255,255,255,0.04);
-  border: 1px solid rgba(255,255,255,0.10);
-}
-
-.brand:hover{
-  border-color: rgba(255,255,255,0.18);
-  background: rgba(255,255,255,0.06);
-}
-
-.brand-logo{
-  width: 54px;
-  height: 54px;
-  object-fit: contain;
-  filter: drop-shadow(0 10px 20px rgba(0,0,0,0.35));
-}
-
-.brand-text h1{
-  margin:0;
-  font-size: 28px;
-  letter-spacing: .2px;
-}
-
-.sub{
-  margin: 2px 0 0;
-  color: var(--muted);
-  font-size: 14px;
-}
-
-/* =========================
-   Card
-   ========================= */
 .card{
-  margin-top: 10px;
+  margin-top: 14px;
   background: var(--surface);
   border: 1px solid var(--border);
   border-radius: 18px;
@@ -96,18 +39,16 @@ body{
   backdrop-filter: blur(6px);
 }
 
-/* =========================
-   Layout helpers
-   ========================= */
-.row{ display:flex; gap:10px; }
-.row-between{ justify-content:space-between; align-items:center; margin-top:12px; }
-.muted{ color: var(--muted); font-size: 14px; }
+.h2{ margin:0 0 10px; font-size:18px; color:var(--text); }
 
-/* =========================
-   Inputs / Buttons
-   ========================= */
+.row{ display:flex; gap:10px; }
+.row-col{ display:flex; flex-direction:column; gap:10px; }
+.row-between{ justify-content:space-between; align-items:center; margin-top:12px; }
+.muted{ color:var(--muted); font-size:14px; }
+
+.label{ display:flex; flex-direction:column; gap:6px; font-size:14px; color:var(--muted); }
+
 input{
-  flex:1;
   padding: 12px 12px;
   border-radius: 12px;
   border: 1px solid rgba(255,255,255,0.14);
@@ -127,7 +68,6 @@ input:focus{
   background: rgba(255,255,255,0.10);
   color: var(--text);
   cursor: pointer;
-  user-select:none;
 }
 .btn:hover{ background: rgba(255,255,255,0.16); }
 
@@ -135,21 +75,33 @@ input:focus{
   border-color: rgba(42,167,255,0.35);
   background: linear-gradient(135deg, var(--brand), var(--brand-2));
 }
-.btn-primary:hover{
-  filter: brightness(1.06);
-}
+.btn-primary:hover{ filter: brightness(1.06); }
 
-.btn-ghost{
+.btn-ghost{ background: transparent; }
+.btn-ghost:hover{ background: rgba(255,255,255,0.08); }
+
+.error{ margin:0; color: var(--danger); min-height: 18px; }
+
+.hidden{ display:none; }
+
+/* Filters */
+.filters{ margin-top:10px; flex-wrap:wrap; }
+.filter-btn{
+  padding: 10px 12px;
+  border-radius: 999px;
+  border: 1px solid rgba(255,255,255,0.14);
   background: transparent;
+  color: var(--text);
+  cursor:pointer;
 }
-.btn-ghost:hover{
-  background: rgba(255,255,255,0.08);
+.filter-btn:hover{ background: rgba(255,255,255,0.08); }
+.filter-btn.active{
+  border-color: rgba(42,167,255,0.45);
+  background: rgba(42,167,255,0.16);
 }
 
-/* =========================
-   Task list
-   ========================= */
-.list{ list-style:none; margin: 14px 0 0; padding:0; }
+/* Task list */
+.list{ list-style:none; margin:14px 0 0; padding:0; }
 .item{
   display:flex;
   align-items:center;
@@ -162,17 +114,8 @@ input:focus{
   margin-bottom: 10px;
 }
 .item-left{ display:flex; align-items:center; gap:10px; }
-
-.item input[type="checkbox"]{
-  width: 18px;
-  height: 18px;
-  accent-color: var(--brand-2);
-}
-
-.item.done .text{
-  text-decoration: line-through;
-  color: var(--muted);
-}
+.item input[type="checkbox"]{ width:18px; height:18px; accent-color: var(--brand-2); }
+.item.done .text{ text-decoration: line-through; color: var(--muted); }
 
 .icon-btn{
   padding: 8px 10px;
@@ -184,31 +127,4 @@ input:focus{
 }
 .icon-btn:hover{ background: rgba(255,255,255,0.14); }
 
-/* =========================
-   Filters
-   ========================= */
-.filters{ margin-top: 10px; flex-wrap: wrap; }
-
-.filter-btn{
-  padding: 10px 12px;
-  border-radius: 999px;
-  border: 1px solid rgba(255,255,255,0.14);
-  background: transparent;
-  color: var(--text);
-  cursor:pointer;
-}
-.filter-btn:hover{
-  background: rgba(255,255,255,0.08);
-}
-.filter-btn.active{
-  border-color: rgba(42,167,255,0.45);
-  background: rgba(42,167,255,0.16);
-}
-
-/* =========================
-   Footer
-   ========================= */
-.footer{
-  margin-top: 18px;
-  color: var(--muted);
-}
+.footer{ margin-top:18px; color: var(--muted); }
