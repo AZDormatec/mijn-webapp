@@ -7,74 +7,68 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="container">
-    <header class="header">
-      <h1>Dormatec</h1>
-      <p class="sub">Beveiligde takenlijst + planning</p>
+  <main class="shell">
+    <header class="topbar glass">
+      <div class="brand">
+        <div class="brand-mark"></div>
+        <div class="brand-text">
+          <div class="brand-title">Dormatec</div>
+          <div class="brand-sub">Planning & Taken (secure)</div>
+        </div>
+      </div>
+
+      <div class="topbar-right">
+        <div class="user-pill" id="userInfo">Ingelogd</div>
+        <button id="logoutBtn" class="btn btn-ghost" type="button">Uitloggen</button>
+      </div>
     </header>
 
     <!-- LOGIN -->
-    <section id="loginCard" class="card">
-      <h2 class="h2">Inloggen</h2>
-      <form id="loginForm" class="row-col">
-        <label class="label">
-          E-mail
+    <section id="loginCard" class="panel glass">
+      <div class="panel-head">
+        <div>
+          <div class="panel-title">Inloggen</div>
+          <div class="panel-sub">Gebruik je Dormatec e-mail + wachtwoord</div>
+        </div>
+      </div>
+
+      <form id="loginForm" class="stack">
+        <label class="field">
+          <span>E-mail</span>
           <input id="emailInput" type="email" placeholder="naam@bedrijf.nl" autocomplete="username" required />
         </label>
 
-        <label class="label">
-          Wachtwoord
+        <label class="field">
+          <span>Wachtwoord</span>
           <input id="passwordInput" type="password" placeholder="••••••••" autocomplete="current-password" required />
         </label>
 
         <button class="btn btn-primary" type="submit">Inloggen</button>
-        <p id="loginError" class="error" aria-live="polite"></p>
+        <div id="loginError" class="hint error" aria-live="polite"></div>
       </form>
     </section>
 
     <!-- APP -->
-    <section id="appCard" class="card hidden">
-      <div class="row row-between">
-        <div class="muted" id="userInfo">Ingelogd</div>
-        <button id="logoutBtn" class="btn btn-ghost" type="button">Uitloggen</button>
-      </div>
-
-      <!-- Tabs -->
+    <section id="appCard" class="panel glass hidden">
       <div class="tabs">
-        <button class="tab-btn active" data-tab="tasks">Taken</button>
-        <button class="tab-btn" data-tab="agenda">Agenda</button>
+        <button class="tab-btn active" data-tab="agenda">
+          <span class="tab-dot"></span> Agenda
+        </button>
+        <button class="tab-btn" data-tab="tasks">
+          <span class="tab-dot"></span> Taken
+        </button>
       </div>
-
-      <!-- TAB: Taken -->
-      <section id="tabTasks" class="tab-panel">
-        <form id="taskForm" class="row" style="margin-top:12px;">
-          <input id="taskInput" type="text" placeholder="Nieuwe taak..." autocomplete="off" />
-          <button type="submit" class="btn btn-primary">Toevoegen</button>
-        </form>
-
-        <div class="row row-between">
-          <div class="muted" id="counter">0 taken</div>
-          <button id="clearDoneBtn" class="btn btn-ghost" type="button">Verwijder afgerond</button>
-        </div>
-
-        <div class="row filters">
-          <button type="button" class="filter-btn active" data-filter="all">Alle</button>
-          <button type="button" class="filter-btn" data-filter="open">Open</button>
-          <button type="button" class="filter-btn" data-filter="done">Afgerond</button>
-        </div>
-
-        <ul id="taskList" class="list"></ul>
-      </section>
 
       <!-- TAB: Agenda -->
-      <section id="tabAgenda" class="tab-panel hidden">
-        <div class="agenda-header">
-          <div class="agenda-left">
+      <section id="tabAgenda" class="tab-panel">
+        <div class="toolbar glass-soft">
+          <div class="toolbar-left">
             <button id="prevMonthBtn" class="btn btn-ghost" type="button">◀</button>
-            <div class="agenda-title" id="monthTitle">Maand</div>
+            <div class="toolbar-title" id="monthTitle">Maand</div>
             <button id="nextMonthBtn" class="btn btn-ghost" type="button">▶</button>
           </div>
-          <div class="agenda-right">
+
+          <div class="toolbar-right">
             <button id="addEventBtn" class="btn btn-primary" type="button">+ Toevoegen</button>
           </div>
         </div>
@@ -85,79 +79,118 @@
 
         <div id="calendarGrid" class="calendar-grid"></div>
 
-        <div class="legend">
-          <span class="legend-item"><span class="dot dot-install"></span> Installatie</span>
-          <span class="legend-item"><span class="dot dot-leave"></span> Verlof</span>
-          <span class="legend-item"><span class="chip chip-temp">Tijdelijk</span></span>
-          <span class="legend-item"><span class="chip chip-def">Definitief</span></span>
+        <div class="legend glass-soft">
+          <div class="legend-item"><span class="swatch swatch-install"></span> Installatie</div>
+          <div class="legend-item"><span class="swatch swatch-leave"></span> Verlof</div>
+          <div class="legend-item"><span class="badge badge-temp">Tijdelijk</span></div>
+          <div class="legend-item"><span class="badge badge-def">Definitief</span></div>
         </div>
+      </section>
+
+      <!-- TAB: Taken -->
+      <section id="tabTasks" class="tab-panel hidden">
+        <div class="toolbar glass-soft">
+          <div class="toolbar-left">
+            <div class="toolbar-title">Taken</div>
+            <div class="toolbar-sub" id="counter">0 taken</div>
+          </div>
+          <div class="toolbar-right">
+            <button id="clearDoneBtn" class="btn btn-ghost" type="button">Verwijder afgerond</button>
+          </div>
+        </div>
+
+        <form id="taskForm" class="task-create glass-soft">
+          <input id="taskInput" type="text" placeholder="Nieuwe taak..." autocomplete="off" />
+          <input id="assigneeInput" type="email" placeholder="Toewijzen aan (email)..." list="assigneesList" />
+          <datalist id="assigneesList"></datalist>
+          <button type="submit" class="btn btn-primary">Toevoegen</button>
+        </form>
+
+        <div class="task-filters glass-soft">
+          <div class="filter-group">
+            <button type="button" class="filter-btn active" data-filter="all">Alle</button>
+            <button type="button" class="filter-btn" data-filter="open">Open</button>
+            <button type="button" class="filter-btn" data-filter="done">Afgerond</button>
+          </div>
+
+          <div class="filter-right">
+            <label class="mini">
+              Toegewezen aan
+              <select id="assigneeFilter" class="select">
+                <option value="__all__">Iedereen</option>
+              </select>
+            </label>
+          </div>
+        </div>
+
+        <ul id="taskList" class="task-list"></ul>
       </section>
     </section>
 
     <footer class="footer">
-      <small>Alleen toegankelijk met account</small>
+      <small>Pages staat uit totdat jij publiceert</small>
     </footer>
   </main>
 
   <!-- Modal -->
   <div id="modalBackdrop" class="modal-backdrop hidden"></div>
 
-  <div id="eventModal" class="modal hidden" role="dialog" aria-modal="true">
+  <div id="eventModal" class="modal glass hidden" role="dialog" aria-modal="true">
     <div class="modal-head">
       <div class="modal-title" id="modalTitle">Planning toevoegen</div>
       <button id="closeModalBtn" class="btn btn-ghost" type="button">✕</button>
     </div>
 
-    <form id="eventForm" class="row-col modal-body">
-      <label class="label">
-        Type
+    <form id="eventForm" class="stack">
+      <label class="field">
+        <span>Type</span>
         <select id="eventType" class="select">
           <option value="install">Installatie</option>
           <option value="leave">Verlof</option>
         </select>
       </label>
 
-      <label class="label">
-        Monteur / collega
+      <label class="field">
+        <span>Monteur / collega</span>
         <input id="techInput" type="text" placeholder="Bijv. Jan Jansen" required />
       </label>
 
-      <label class="label" id="orderWrap">
-        Ordernummer
+      <label class="field" id="orderWrap">
+        <span>Ordernummer</span>
         <input id="orderInput" type="text" placeholder="Bijv. ORD-12345" />
       </label>
 
-      <div class="row two">
-        <label class="label">
-          Begin datum
+      <div class="grid2">
+        <label class="field">
+          <span>Begin datum</span>
           <input id="startDate" type="date" required />
         </label>
-        <label class="label">
-          Begin tijd
+        <label class="field">
+          <span>Begin tijd</span>
           <input id="startTime" type="time" required />
         </label>
       </div>
 
-      <div class="row two">
-        <label class="label">
-          Eind datum
+      <div class="grid2">
+        <label class="field">
+          <span>Eind datum</span>
           <input id="endDate" type="date" required />
         </label>
-        <label class="label">
-          Eind tijd
+        <label class="field">
+          <span>Eind tijd</span>
           <input id="endTime" type="time" required />
         </label>
       </div>
 
-      <label class="label">
-        Status
+      <label class="field">
+        <span>Status</span>
         <select id="statusSelect" class="select">
           <option value="temp">Tijdelijk</option>
           <option value="def">Definitief</option>
         </select>
       </label>
 
-      <p id="eventError" class="error" aria-live="polite"></p>
+      <div id="eventError" class="hint error" aria-live="polite"></div>
 
       <div class="modal-actions">
         <button class="btn btn-primary" type="submit">Opslaan</button>

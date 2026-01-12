@@ -13,10 +13,17 @@ import {
   onSnapshot,
   query,
   where,
-  serverTimestamp
+  orderBy,
+  serverTimestamp,
+  doc,
+  updateDoc,
+  deleteDoc,
+  getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-// Firebase config (jouw project)
+/* =========================
+   Firebase config (jouw project)
+========================= */
 const firebaseConfig = {
   apiKey: "AIzaSyCOvBIrruUuuTrtF2sJP0CatLnhL1Y0jLQ",
   authDomain: "dormatec-app.firebaseapp.com",
@@ -53,6 +60,10 @@ const tabAgenda = document.getElementById("tabAgenda");
 // Tasks UI
 const taskForm = document.getElementById("taskForm");
 const taskInput = document.getElementById("taskInput");
+const assigneeInput = document.getElementById("assigneeInput");
+const assigneesList = document.getElementById("assigneesList");
+const assigneeFilter = document.getElementById("assigneeFilter");
+
 const taskList = document.getElementById("taskList");
 const counter = document.getElementById("counter");
 const clearDoneBtn = document.getElementById("clearDoneBtn");
@@ -89,15 +100,17 @@ const eventError = document.getElementById("eventError");
 ========================= */
 let currentUserId = null;
 
-// Tasks: lokaal per user
-let tasks = [];
-let currentFilter = "all";
+// Tasks (Firestore shared)
+let allTasks = [];          // all tasks from Firestore
+let taskStatusFilter = "all";
+let taskAssigneeFilter = "__all__";
+let unsubTasks = null;
 
-// Agenda: gedeeld via Firestore
+// Agenda (Firestore shared)
 let calendarMonth = new Date();
 calendarMonth.setDate(1);
-let monthEvents = []; // events for current month (from Firestore)
-let unsubscribeMonth = null;
+let monthEvents = [];
+let unsubMonth = null;
 
 /* =========================
    Helpers
@@ -114,14 +127,8 @@ function parseLocalDateTime(dateStr, timeStr){
   const [hh,mm] = timeStr.split(":").map(Number);
   return new Date(y, m-1, da, hh, mm, 0, 0);
 }
-function clampToStartOfDay(d){
-  const x = new Date(d); x.setHours(0,0,0,0); return x;
-}
 function addDays(d, days){
   const x = new Date(d); x.setDate(x.getDate() + days); return x;
-}
-function uid() {
-  return Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
 
 /* =========================
@@ -135,380 +142,37 @@ function setTab(tabName){
 tabButtons.forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
 /* =========================
-   Tasks (localStorage per user)
+   AUTH
 ========================= */
-function storageKey() {
-  return `dormatec_tasks_${currentUserId}`;
-}
-function loadTasks() {
-  if (!currentUserId) return [];
-  try {
-    const raw = localStorage.getItem(storageKey());
-    return raw ? JSON.parse(raw) : [];
-  } catch {
-    return [];
-  }
-}
-function saveTasks() {
-  if (!currentUserId) return;
-  localStorage.setItem(storageKey(), JSON.stringify(tasks));
-}
-function getVisibleTasks() {
-  if (currentFilter === "open") return tasks.filter(t => !t.done);
-  if (currentFilter === "done") return tasks.filter(t => t.done);
-  return tasks;
-}
-function renderTasks() {
-  taskList.innerHTML = "";
-  const visible = getVisibleTasks();
-
-  for (const t of visible) {
-    const li = document.createElement("li");
-    li.className = "item" + (t.done ? " done" : "");
-
-    const left = document.createElement("div");
-    left.className = "item-left";
-
-    const checkbox = document.createElement("input");
-    checkbox.type = "checkbox";
-    checkbox.checked = t.done;
-    checkbox.addEventListener("change", () => {
-      t.done = checkbox.checked;
-      saveTasks();
-      renderTasks();
-    });
-
-    const text = document.createElement("div");
-    text.className = "text";
-    text.textContent = t.text;
-
-    left.appendChild(checkbox);
-    left.appendChild(text);
-
-    const delBtn = document.createElement("button");
-    delBtn.className = "icon-btn";
-    delBtn.type = "button";
-    delBtn.textContent = "🗑️";
-    delBtn.addEventListener("click", () => {
-      tasks = tasks.filter(x => x.id !== t.id);
-      saveTasks();
-      renderTasks();
-    });
-
-    li.appendChild(left);
-    li.appendChild(delBtn);
-    taskList.appendChild(li);
-  }
-
-  const total = tasks.length;
-  const done = tasks.filter(t => t.done).length;
-  counter.textContent = `${total} taken • ${done} afgerond`;
-}
-
-filterButtons.forEach(btn => {
-  btn.addEventListener("click", () => {
-    currentFilter = btn.dataset.filter;
-    filterButtons.forEach(b => b.classList.remove("active"));
-    btn.classList.add("active");
-    renderTasks();
-  });
-});
-
-taskForm.addEventListener("submit", (e) => {
-  e.preventDefault();
-  if (!currentUserId) return;
-
-  const text = taskInput.value.trim();
-  if (!text) return;
-
-  tasks.unshift({ id: uid(), text, done: false });
-  taskInput.value = "";
-  saveTasks();
-  renderTasks();
-});
-
-clearDoneBtn.addEventListener("click", () => {
-  if (!currentUserId) return;
-  tasks = tasks.filter(t => !t.done);
-  saveTasks();
-  renderTasks();
-});
-
-/* =========================
-   Modal (Agenda)
-========================= */
-function openModal(){
-  modalBackdrop.classList.remove("hidden");
-  eventModal.classList.remove("hidden");
-}
-function closeModal(){
-  modalBackdrop.classList.add("hidden");
-  eventModal.classList.add("hidden");
-  eventError.textContent = "";
-  eventForm.reset();
-  // default
-  eventType.value = "install";
-  statusSelect.value = "temp";
-  orderWrap.classList.remove("hidden");
-}
-function syncOrderVisibility(){
-  if (eventType.value === "leave") {
-    orderWrap.classList.add("hidden");
-    orderInput.value = "";
-  } else {
-    orderWrap.classList.remove("hidden");
-  }
-}
-eventType.addEventListener("change", syncOrderVisibility);
-
-closeModalBtn.addEventListener("click", closeModal);
-cancelModalBtn.addEventListener("click", closeModal);
-modalBackdrop.addEventListener("click", closeModal);
-
-addEventBtn.addEventListener("click", () => {
-  modalTitle.textContent = "Planning toevoegen";
-  // defaults: vandaag 08:00 - 17:00
-  const now = new Date();
-  const today = ymd(now);
-  startDate.value = today;
-  endDate.value = today;
-  startTime.value = "08:00";
-  endTime.value = "17:00";
-  eventType.value = "install";
-  statusSelect.value = "temp";
-  syncOrderVisibility();
-  openModal();
-});
-
-/* =========================
-   Firestore: Agenda
-   We slaan monthKeys array op zodat we per maand exact kunnen query-en.
-========================= */
-function computeMonthKeys(start, end){
-  const keys = new Set();
-  const a = new Date(start); a.setDate(1); a.setHours(0,0,0,0);
-  const b = new Date(end); b.setDate(1); b.setHours(0,0,0,0);
-
-  let cur = new Date(a);
-  while (cur <= b) {
-    keys.add(monthKey(cur));
-    cur.setMonth(cur.getMonth() + 1);
-  }
-  return Array.from(keys);
-}
-
-function listenMonth(){
-  if (!currentUserId) return;
-
-  if (unsubscribeMonth) unsubscribeMonth();
-  const mk = monthKey(calendarMonth);
-
-  const col = collection(db, "scheduleEvents");
-  const q = query(col, where("monthKeys", "array-contains", mk));
-
-  unsubscribeMonth = onSnapshot(q, (snap) => {
-    monthEvents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
-    renderCalendar();
-  });
-}
-
-prevMonthBtn.addEventListener("click", () => {
-  calendarMonth.setMonth(calendarMonth.getMonth() - 1);
-  calendarMonth.setDate(1);
-  listenMonth();
-  renderCalendar();
-});
-
-nextMonthBtn.addEventListener("click", () => {
-  calendarMonth.setMonth(calendarMonth.getMonth() + 1);
-  calendarMonth.setDate(1);
-  listenMonth();
-  renderCalendar();
-});
-
-/* =========================
-   Calendar rendering
-========================= */
-const MONTHS_NL = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
-
-function eventTouchesDay(ev, day){
-  const start = ev.startTS?.toDate ? ev.startTS.toDate() : new Date(ev.startISO);
-  const end = ev.endTS?.toDate ? ev.endTS.toDate() : new Date(ev.endISO);
-
-  const dayStart = new Date(day); dayStart.setHours(0,0,0,0);
-  const dayEnd = new Date(day); dayEnd.setHours(23,59,59,999);
-
-  return (start <= dayEnd) && (end >= dayStart);
-}
-
-function formatTimeRange(ev){
-  const start = ev.startTS?.toDate ? ev.startTS.toDate() : new Date(ev.startISO);
-  const end = ev.endTS?.toDate ? ev.endTS.toDate() : new Date(ev.endISO);
-  const s = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`;
-  const e = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
-  return `${s}–${e}`;
-}
-
-function renderCalendar(){
-  monthTitle.textContent = `${MONTHS_NL[calendarMonth.getMonth()]} ${calendarMonth.getFullYear()}`;
-
-  // Start day for grid (Monday as first day)
-  const first = new Date(calendarMonth);
-  const dow = (first.getDay() + 6) % 7; // Mon=0..Sun=6
-  const gridStart = addDays(first, -dow);
-
-  // 6 weeks grid
-  calendarGrid.innerHTML = "";
-  for (let i=0; i<42; i++){
-    const day = addDays(gridStart, i);
-    const inMonth = day.getMonth() === calendarMonth.getMonth();
-
-    const dayEl = document.createElement("div");
-    dayEl.className = "day" + (inMonth ? "" : " muted-day");
-
-    const head = document.createElement("div");
-    head.className = "day-head";
-
-    const num = document.createElement("div");
-    num.className = "day-num";
-    num.textContent = day.getDate();
-
-    const meta = document.createElement("div");
-    meta.textContent = ""; // ruimte voor later (bijv bezetting)
-
-    head.appendChild(num);
-    head.appendChild(meta);
-
-    const eventsWrap = document.createElement("div");
-    eventsWrap.className = "events";
-
-    // events for this day
-    const todays = monthEvents
-      .filter(ev => eventTouchesDay(ev, day))
-      .sort((a,b) => {
-        const as = a.startTS?.toDate ? a.startTS.toDate() : new Date(a.startISO);
-        const bs = b.startTS?.toDate ? b.startTS.toDate() : new Date(b.startISO);
-        return as - bs;
-      });
-
-    for (const ev of todays.slice(0, 3)) {
-      const pill = document.createElement("div");
-      pill.className = `event-pill ${ev.type} ${ev.status}`;
-      const label = ev.type === "leave"
-        ? `Verlof • ${ev.tech}`
-        : `${ev.tech} • ${ev.orderNo || "Geen order"}`;
-
-      pill.textContent = label;
-
-      const metaLine = document.createElement("div");
-      metaLine.className = "event-meta";
-      metaLine.textContent = `${formatTimeRange(ev)} • ${ev.status === "def" ? "Def" : "Tmp"}`;
-
-      const wrap = document.createElement("div");
-      wrap.appendChild(pill);
-      wrap.appendChild(metaLine);
-
-      eventsWrap.appendChild(wrap);
-    }
-
-    if (todays.length > 3) {
-      const more = document.createElement("div");
-      more.className = "event-meta";
-      more.textContent = `+${todays.length - 3} meer…`;
-      eventsWrap.appendChild(more);
-    }
-
-    dayEl.appendChild(head);
-    dayEl.appendChild(eventsWrap);
-    calendarGrid.appendChild(dayEl);
-  }
-}
-
-/* =========================
-   Add event (shared for everyone)
-========================= */
-eventForm.addEventListener("submit", async (e) => {
-  e.preventDefault();
-  if (!currentUserId) return;
-
-  eventError.textContent = "";
-
-  const type = eventType.value; // install | leave
-  const tech = techInput.value.trim();
-  const orderNo = orderInput.value.trim();
-  const status = statusSelect.value; // temp | def
-
-  if (!tech) {
-    eventError.textContent = "Vul een monteur/collega in.";
-    return;
-  }
-
-  if (type === "install" && !orderNo) {
-    eventError.textContent = "Vul een ordernummer in (installatie).";
-    return;
-  }
-
-  const start = parseLocalDateTime(startDate.value, startTime.value);
-  const end = parseLocalDateTime(endDate.value, endTime.value);
-
-  if (!(start instanceof Date) || isNaN(start) || !(end instanceof Date) || isNaN(end)) {
-    eventError.textContent = "Begin/eind datum en tijd zijn verplicht.";
-    return;
-  }
-  if (end < start) {
-    eventError.textContent = "Eindmoment moet na beginmoment liggen.";
-    return;
-  }
-
-  const mk = computeMonthKeys(start, end);
-
-  await addDoc(collection(db, "scheduleEvents"), {
-    type,            // install | leave
-    tech,            // monteur/collega
-    orderNo: type === "install" ? orderNo : "",
-    status,          // temp | def
-    startISO: start.toISOString(),
-    endISO: end.toISOString(),
-    monthKeys: mk,   // voor maand-query
-    createdBy: currentUserId,
-    createdAt: serverTimestamp()
-  });
-
-  closeModal();
-});
-
-/* =========================
-   Auth UI behavior
-========================= */
-function showLoggedOut() {
+function showLoggedOut(){
   loginCard.classList.remove("hidden");
   appCard.classList.add("hidden");
   loginError.textContent = "";
+  userInfo.textContent = "Ingelogd";
   currentUserId = null;
-  tasks = [];
+
+  if (unsubTasks) { unsubTasks(); unsubTasks = null; }
+  if (unsubMonth) { unsubMonth(); unsubMonth = null; }
+
   taskList.innerHTML = "";
   counter.textContent = "0 taken";
-  if (unsubscribeMonth) { unsubscribeMonth(); unsubscribeMonth = null; }
+  calendarGrid.innerHTML = "";
 }
 
-function showLoggedIn(user) {
+function showLoggedIn(user){
   loginCard.classList.add("hidden");
   appCard.classList.remove("hidden");
   userInfo.textContent = `Ingelogd: ${user.email}`;
   currentUserId = user.uid;
 
-  // tasks local
-  tasks = loadTasks();
-  renderTasks();
-
-  // agenda shared
-  calendarMonth = new Date();
-  calendarMonth.setDate(1);
-  listenMonth();
-  renderCalendar();
-
   // default tab
   setTab("agenda");
+
+  // Start listeners
+  listenTasks();
+  calendarMonth = new Date(); calendarMonth.setDate(1);
+  listenMonth();
+  renderCalendar();
 }
 
 onAuthStateChanged(auth, (user) => {
@@ -533,4 +197,402 @@ loginForm.addEventListener("submit", async (e) => {
 
 logoutBtn.addEventListener("click", async () => {
   await signOut(auth);
+});
+
+/* =========================
+   TASKS (shared via Firestore)
+========================= */
+function normalizeEmail(x){
+  return (x || "").trim().toLowerCase();
+}
+
+function applyTaskFilters(tasks){
+  let visible = tasks;
+
+  if (taskStatusFilter === "open") visible = visible.filter(t => !t.done);
+  if (taskStatusFilter === "done") visible = visible.filter(t => !!t.done);
+
+  if (taskAssigneeFilter !== "__all__") {
+    visible = visible.filter(t => normalizeEmail(t.assigneeEmail) === normalizeEmail(taskAssigneeFilter));
+  }
+  return visible;
+}
+
+function refreshAssigneeUI(){
+  // Build unique assignees from allTasks
+  const set = new Set();
+  for (const t of allTasks) {
+    const a = normalizeEmail(t.assigneeEmail);
+    if (a) set.add(a);
+  }
+  const assignees = Array.from(set).sort();
+
+  // datalist for quick entry
+  assigneesList.innerHTML = "";
+  for (const a of assignees) {
+    const opt = document.createElement("option");
+    opt.value = a;
+    assigneesList.appendChild(opt);
+  }
+
+  // filter select
+  const current = assigneeFilter.value || "__all__";
+  assigneeFilter.innerHTML = `<option value="__all__">Iedereen</option>`;
+  for (const a of assignees) {
+    const opt = document.createElement("option");
+    opt.value = a;
+    opt.textContent = a;
+    assigneeFilter.appendChild(opt);
+  }
+  // restore selection if possible
+  assigneeFilter.value = assignees.includes(current) ? current : "__all__";
+  taskAssigneeFilter = assigneeFilter.value;
+}
+
+function renderTasks(){
+  const visible = applyTaskFilters(allTasks);
+
+  taskList.innerHTML = "";
+  for (const t of visible) {
+    const li = document.createElement("li");
+    li.className = "task" + (t.done ? " task-done" : "");
+
+    const left = document.createElement("div");
+    left.className = "task-left";
+
+    const checkbox = document.createElement("input");
+    checkbox.type = "checkbox";
+    checkbox.checked = !!t.done;
+    checkbox.addEventListener("change", async () => {
+      await updateDoc(doc(db, "tasks", t.id), { done: checkbox.checked });
+    });
+
+    const main = document.createElement("div");
+    main.className = "task-main";
+
+    const text = document.createElement("div");
+    text.className = "task-text";
+    text.textContent = t.text || "";
+
+    const meta = document.createElement("div");
+    meta.className = "task-meta";
+
+    const assignee = normalizeEmail(t.assigneeEmail) ? t.assigneeEmail : "—";
+    const pill = document.createElement("span");
+    pill.className = "pill assignee";
+    pill.textContent = `Toegewezen: ${assignee}`;
+
+    const created = document.createElement("span");
+    created.className = "pill";
+    created.textContent = t.createdByEmail ? `Door: ${t.createdByEmail}` : "Door: —";
+
+    meta.appendChild(pill);
+    meta.appendChild(created);
+
+    main.appendChild(text);
+    main.appendChild(meta);
+
+    left.appendChild(checkbox);
+    left.appendChild(main);
+
+    const delBtn = document.createElement("button");
+    delBtn.className = "btn btn-ghost";
+    delBtn.type = "button";
+    delBtn.textContent = "Verwijderen";
+    delBtn.addEventListener("click", async () => {
+      await deleteDoc(doc(db, "tasks", t.id));
+    });
+
+    li.appendChild(left);
+    li.appendChild(delBtn);
+    taskList.appendChild(li);
+  }
+
+  // Counter shows visible/total
+  counter.textContent = `${visible.length} zichtbaar • ${allTasks.length} totaal`;
+}
+
+function listenTasks(){
+  if (unsubTasks) unsubTasks();
+
+  const col = collection(db, "tasks");
+  const q = query(col, orderBy("createdAt", "desc"));
+
+  unsubTasks = onSnapshot(q, (snap) => {
+    allTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    refreshAssigneeUI();
+    renderTasks();
+  });
+}
+
+filterButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    taskStatusFilter = btn.dataset.filter;
+    filterButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+    renderTasks();
+  });
+});
+
+assigneeFilter.addEventListener("change", () => {
+  taskAssigneeFilter = assigneeFilter.value;
+  renderTasks();
+});
+
+taskForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUserId) return;
+
+  const text = taskInput.value.trim();
+  if (!text) return;
+
+  const assigneeEmail = assigneeInput.value.trim();
+
+  // We pakken email uit het loginveld voor "createdByEmail" (makkelijk en bruikbaar)
+  const createdByEmail = (userInfo.textContent || "").replace("Ingelogd: ", "").trim();
+
+  await addDoc(collection(db, "tasks"), {
+    text,
+    done: false,
+    assigneeEmail,
+    createdBy: currentUserId,
+    createdByEmail,
+    createdAt: serverTimestamp()
+  });
+
+  taskInput.value = "";
+  assigneeInput.value = "";
+});
+
+clearDoneBtn.addEventListener("click", async () => {
+  // delete all done tasks (shared)
+  // Let op: bij grote aantallen is dit zwaarder; voor nu prima.
+  const q = query(collection(db, "tasks"), where("done", "==", true));
+  const snap = await getDocs(q);
+  const promises = snap.docs.map(d => deleteDoc(doc(db, "tasks", d.id)));
+  await Promise.all(promises);
+});
+
+/* =========================
+   MODAL (Agenda)
+========================= */
+function openModal(){
+  modalBackdrop.classList.remove("hidden");
+  eventModal.classList.remove("hidden");
+}
+function closeModal(){
+  modalBackdrop.classList.add("hidden");
+  eventModal.classList.add("hidden");
+  eventError.textContent = "";
+  eventForm.reset();
+  eventType.value = "install";
+  statusSelect.value = "temp";
+  orderWrap.classList.remove("hidden");
+}
+function syncOrderVisibility(){
+  if (eventType.value === "leave") {
+    orderWrap.classList.add("hidden");
+    orderInput.value = "";
+  } else {
+    orderWrap.classList.remove("hidden");
+  }
+}
+eventType.addEventListener("change", syncOrderVisibility);
+
+closeModalBtn.addEventListener("click", closeModal);
+cancelModalBtn.addEventListener("click", closeModal);
+modalBackdrop.addEventListener("click", closeModal);
+
+addEventBtn.addEventListener("click", () => {
+  modalTitle.textContent = "Planning toevoegen";
+  const now = new Date();
+  const today = ymd(now);
+  startDate.value = today;
+  endDate.value = today;
+  startTime.value = "08:00";
+  endTime.value = "17:00";
+  eventType.value = "install";
+  statusSelect.value = "temp";
+  syncOrderVisibility();
+  openModal();
+});
+
+/* =========================
+   Firestore: Agenda
+========================= */
+function computeMonthKeys(start, end){
+  const keys = new Set();
+  const a = new Date(start); a.setDate(1); a.setHours(0,0,0,0);
+  const b = new Date(end); b.setDate(1); b.setHours(0,0,0,0);
+
+  let cur = new Date(a);
+  while (cur <= b) {
+    keys.add(monthKey(cur));
+    cur.setMonth(cur.getMonth() + 1);
+  }
+  return Array.from(keys);
+}
+
+function listenMonth(){
+  if (!currentUserId) return;
+  if (unsubMonth) unsubMonth();
+
+  const mk = monthKey(calendarMonth);
+  const col = collection(db, "scheduleEvents");
+  const q = query(col, where("monthKeys", "array-contains", mk));
+
+  unsubMonth = onSnapshot(q, (snap) => {
+    monthEvents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
+    renderCalendar();
+  });
+}
+
+prevMonthBtn.addEventListener("click", () => {
+  calendarMonth.setMonth(calendarMonth.getMonth() - 1);
+  calendarMonth.setDate(1);
+  listenMonth();
+  renderCalendar();
+});
+nextMonthBtn.addEventListener("click", () => {
+  calendarMonth.setMonth(calendarMonth.getMonth() + 1);
+  calendarMonth.setDate(1);
+  listenMonth();
+  renderCalendar();
+});
+
+const MONTHS_NL = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
+
+function eventTouchesDay(ev, day){
+  const start = ev.startTS?.toDate ? ev.startTS.toDate() : new Date(ev.startISO);
+  const end = ev.endTS?.toDate ? ev.endTS.toDate() : new Date(ev.endISO);
+
+  const dayStart = new Date(day); dayStart.setHours(0,0,0,0);
+  const dayEnd = new Date(day); dayEnd.setHours(23,59,59,999);
+
+  return (start <= dayEnd) && (end >= dayStart);
+}
+
+function formatTimeRange(ev){
+  const start = ev.startTS?.toDate ? ev.startTS.toDate() : new Date(ev.startISO);
+  const end = ev.endTS?.toDate ? ev.endTS.toDate() : new Date(ev.endISO);
+  const s = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`;
+  const e = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
+  return `${s}–${e}`;
+}
+
+function renderCalendar(){
+  monthTitle.textContent = `${MONTHS_NL[calendarMonth.getMonth()]} ${calendarMonth.getFullYear()}`;
+
+  const first = new Date(calendarMonth);
+  const dow = (first.getDay() + 6) % 7; // Mon=0..Sun=6
+  const gridStart = addDays(first, -dow);
+
+  const todayYmd = ymd(new Date());
+
+  calendarGrid.innerHTML = "";
+  for (let i=0; i<42; i++){
+    const day = addDays(gridStart, i);
+    const inMonth = day.getMonth() === calendarMonth.getMonth();
+
+    const dayEl = document.createElement("div");
+    dayEl.className = "day" + (inMonth ? "" : " muted-day") + (ymd(day) === todayYmd ? " today" : "");
+
+    const head = document.createElement("div");
+    head.className = "day-head";
+
+    const num = document.createElement("div");
+    num.className = "day-num";
+    num.textContent = day.getDate();
+
+    const chip = document.createElement("div");
+    chip.className = "day-chip";
+    chip.textContent = inMonth ? "" : " ";
+
+    head.appendChild(num);
+    head.appendChild(chip);
+
+    const eventsWrap = document.createElement("div");
+    eventsWrap.className = "events";
+
+    const todays = monthEvents
+      .filter(ev => eventTouchesDay(ev, day))
+      .sort((a,b) => {
+        const as = a.startTS?.toDate ? a.startTS.toDate() : new Date(a.startISO);
+        const bs = b.startTS?.toDate ? b.startTS.toDate() : new Date(b.startISO);
+        return as - bs;
+      });
+
+    for (const ev of todays.slice(0, 3)) {
+      const block = document.createElement("div");
+      block.className = `event ${ev.type} ${ev.status}`;
+
+      const title = document.createElement("div");
+      title.className = "event-title";
+
+      title.textContent = ev.type === "leave"
+        ? `Verlof • ${ev.tech}`
+        : `${ev.tech} • ${ev.orderNo || "Geen order"}`;
+
+      const meta = document.createElement("div");
+      meta.className = "event-meta";
+      const left = document.createElement("span");
+      left.textContent = formatTimeRange(ev);
+      const right = document.createElement("span");
+      right.textContent = ev.status === "def" ? "Definitief" : "Tijdelijk";
+      meta.appendChild(left);
+      meta.appendChild(right);
+
+      block.appendChild(title);
+      block.appendChild(meta);
+
+      eventsWrap.appendChild(block);
+    }
+
+    if (todays.length > 3) {
+      const more = document.createElement("div");
+      more.className = "hint";
+      more.textContent = `+${todays.length - 3} meer…`;
+      eventsWrap.appendChild(more);
+    }
+
+    dayEl.appendChild(head);
+    dayEl.appendChild(eventsWrap);
+    calendarGrid.appendChild(dayEl);
+  }
+}
+
+eventForm.addEventListener("submit", async (e) => {
+  e.preventDefault();
+  if (!currentUserId) return;
+
+  eventError.textContent = "";
+
+  const type = eventType.value;
+  const tech = techInput.value.trim();
+  const orderNo = orderInput.value.trim();
+  const status = statusSelect.value;
+
+  if (!tech) { eventError.textContent = "Vul een monteur/collega in."; return; }
+  if (type === "install" && !orderNo) { eventError.textContent = "Vul een ordernummer in (installatie)."; return; }
+
+  const start = parseLocalDateTime(startDate.value, startTime.value);
+  const end = parseLocalDateTime(endDate.value, endTime.value);
+  if (isNaN(start) || isNaN(end)) { eventError.textContent = "Begin/eind datum en tijd zijn verplicht."; return; }
+  if (end < start) { eventError.textContent = "Eindmoment moet na beginmoment liggen."; return; }
+
+  const mk = computeMonthKeys(start, end);
+
+  await addDoc(collection(db, "scheduleEvents"), {
+    type,
+    tech,
+    orderNo: type === "install" ? orderNo : "",
+    status,
+    startISO: start.toISOString(),
+    endISO: end.toISOString(),
+    monthKeys: mk,
+    createdBy: currentUserId,
+    createdAt: serverTimestamp()
+  });
+
+  closeModal();
 });
