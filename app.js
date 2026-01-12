@@ -143,6 +143,7 @@ function showLoggedOut(){
   counter.textContent = "0 taken";
   calendarGrid.innerHTML = "";
 }
+
 function showLoggedIn(user){
   loginCard.classList.add("hidden");
   appCard.classList.remove("hidden");
@@ -184,7 +185,6 @@ function applyTaskFilters(tasks){
   let v = tasks;
   if (taskStatusFilter === "open") v = v.filter(t => !t.done);
   if (taskStatusFilter === "done") v = v.filter(t => !!t.done);
-
   if (taskAssigneeFilter !== "__all__") {
     v = v.filter(t => normalizeEmail(t.assigneeEmail) === normalizeEmail(taskAssigneeFilter));
   }
@@ -251,10 +251,6 @@ function renderTasks(){
     pillA.className = "pill assignee";
     pillA.textContent = `Toegewezen: ${assignee}`;
 
-    const pillC = document.createElement("span");
-    pillC.className = "pill";
-    pillC.textContent = t.createdByEmail ? `Door: ${t.createdByEmail}` : "Door: —";
-
     meta.appendChild(pillA);
 
     if ((t.note || "").trim()) {
@@ -264,6 +260,9 @@ function renderTasks(){
       meta.appendChild(pillN);
     }
 
+    const pillC = document.createElement("span");
+    pillC.className = "pill";
+    pillC.textContent = t.createdByEmail ? `Door: ${t.createdByEmail}` : "Door: —";
     meta.appendChild(pillC);
 
     main.appendChild(text);
@@ -290,7 +289,6 @@ function renderTasks(){
 
 function listenTasks(){
   if (unsubTasks) unsubTasks();
-
   const q = query(collection(db, "tasks"), orderBy("createdAt", "desc"));
   unsubTasks = onSnapshot(q, (snap) => {
     allTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
@@ -400,6 +398,7 @@ function formatTimeRange(ev){
   return `${pad2(start.getHours())}:${pad2(start.getMinutes())}–${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
 }
 
+/* Modal */
 function openModal(){
   modalBackdrop.classList.remove("hidden");
   eventModal.classList.remove("hidden");
@@ -469,7 +468,6 @@ function renderCalendar(){
   const first = new Date(calendarMonth);
   const dow = (first.getDay() + 6) % 7;
   const gridStart = addDays(first, -dow);
-
   const todayYmd = ymd(new Date());
 
   calendarGrid.innerHTML = "";

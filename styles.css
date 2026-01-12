@@ -1,41 +1,44 @@
 :root{
-  /* Accent (logo-groen). Pas aan als je exact logo-groen wil. */
+  /* Accent (zet straks exact naar jouw logo-groen als je wilt) */
   --accent: #00a86b;
   --accent-2: #22c58b;
 
   --ink: #0b1220;
   --muted: rgba(11,18,32,.62);
 
-  /* Soft porcelain background */
-  --bg0: #f7f8fa;
-  --bg1: #f2f4f7;
+  /* Soft “porcelain” */
+  --bg0: #f6f7f9;
+  --bg1: #eff2f6;
 
   /* Glass */
-  --glass: rgba(255,255,255,.58);
-  --glass-soft: rgba(255,255,255,.40);
+  --glass: rgba(255,255,255,.54);
+  --glass-soft: rgba(255,255,255,.38);
 
-  /* Hairlines */
-  --line: rgba(0,168,107,.22);
+  /* Borders: iets dikker maar nog refined */
+  --borderW: 1.5px;
+  --line: rgba(0,168,107,.34);
   --line2: rgba(11,18,32,.10);
 
   --shadow: 0 22px 70px rgba(11,18,32,.14);
   --shadow-soft: 0 16px 50px rgba(11,18,32,.10);
 
+  /* Briefpapier zichtbaarheid */
+  --paperOpacity: 0.10;
+
   /* Status contrast */
   --temp-bg: rgba(255, 155, 45, .18);
-  --temp-line: rgba(255, 155, 45, .78);
+  --temp-line: rgba(255, 155, 45, .85);
 
   --def-bg: rgba(0,168,107,.16);
-  --def-line: rgba(0,168,107,.86);
+  --def-line: rgba(0,168,107,.92);
 
   --install-bg: rgba(38, 132, 255, .16);
-  --install-line: rgba(38, 132, 255, .78);
+  --install-line: rgba(38, 132, 255, .82);
 
   --leave-bg: rgba(245, 158, 11, .18);
-  --leave-line: rgba(245, 158, 11, .82);
+  --leave-line: rgba(245, 158, 11, .88);
 
   --r: 20px;
-  --r2: 16px;
 }
 
 *{ box-sizing:border-box; }
@@ -47,10 +50,25 @@ body{
   color: var(--ink);
 
   background:
-    radial-gradient(1000px 520px at 10% 10%, rgba(0,168,107,.10), transparent 60%),
-    radial-gradient(1000px 520px at 90% 0%, rgba(34,197,139,.08), transparent 60%),
+    radial-gradient(1200px 600px at 10% 10%, rgba(0,168,107,.10), transparent 62%),
+    radial-gradient(1200px 600px at 90% 0%, rgba(34,197,139,.08), transparent 62%),
     radial-gradient(900px 520px at 50% 110%, rgba(38,132,255,.07), transparent 62%),
     linear-gradient(180deg, var(--bg0), var(--bg1));
+}
+
+/* Briefpapier als luxe watermark */
+body::before{
+  content:"";
+  position: fixed;
+  inset: 0;
+  background-image: url("assets/briefpapier.png");
+  background-repeat: no-repeat;
+  background-position: center top;
+  background-size: cover;
+  opacity: var(--paperOpacity);
+  pointer-events: none;
+  z-index: -1;
+  filter: saturate(1.02) contrast(1.02);
 }
 
 .shell{
@@ -61,25 +79,25 @@ body{
 
 .hidden{ display:none !important; }
 
-/* Glass primitives */
 .glass{
   background: var(--glass);
-  border: 1px solid var(--line);
+  border: var(--borderW) solid var(--line);
   border-radius: var(--r);
   box-shadow: var(--shadow);
-  backdrop-filter: blur(16px) saturate(1.2);
-  -webkit-backdrop-filter: blur(16px) saturate(1.2);
-}
-.glass-soft{
-  background: var(--glass-soft);
-  border: 1px solid var(--line2);
-  border-radius: var(--r);
-  box-shadow: var(--shadow-soft);
-  backdrop-filter: blur(14px) saturate(1.15);
-  -webkit-backdrop-filter: blur(14px) saturate(1.15);
+  backdrop-filter: blur(18px) saturate(1.25);
+  -webkit-backdrop-filter: blur(18px) saturate(1.25);
 }
 
-/* Topbar */
+.glass-soft{
+  background: var(--glass-soft);
+  border: var(--borderW) solid rgba(0,168,107,.20);
+  border-radius: var(--r);
+  box-shadow: var(--shadow-soft);
+  backdrop-filter: blur(16px) saturate(1.18);
+  -webkit-backdrop-filter: blur(16px) saturate(1.18);
+}
+
+/* Header */
 .topbar{
   display:flex;
   align-items:center;
@@ -97,16 +115,16 @@ body{
   gap:12px;
   min-width: 260px;
 }
-.brand-mark{
-  width: 42px; height: 42px;
-  border-radius: 16px;
-  background:
-    radial-gradient(16px 16px at 30% 30%, rgba(255,255,255,.95), transparent 62%),
-    linear-gradient(135deg, var(--accent), var(--accent-2));
-  box-shadow: 0 18px 42px rgba(0,168,107,.16);
+
+.brand-logo{
+  height: 42px;
+  width: auto;
+  display:block;
+  filter: drop-shadow(0 12px 22px rgba(11,18,32,.12));
 }
+
 .brand-title{
-  font-weight: 860;
+  font-weight: 900;
   letter-spacing: .2px;
   font-size: 16px;
 }
@@ -121,11 +139,12 @@ body{
   align-items:center;
   gap:10px;
 }
+
 .user-pill{
   font-size: 12px;
   padding: 10px 12px;
   border-radius: 999px;
-  border: 1px solid var(--line2);
+  border: 1px solid rgba(11,18,32,.10);
   background: rgba(255,255,255,.55);
   color: rgba(11,18,32,.82);
 }
@@ -135,6 +154,7 @@ body{
   margin-top: 14px;
   padding: 14px;
 }
+
 .panel-head{
   display:flex;
   justify-content:space-between;
@@ -142,10 +162,12 @@ body{
   gap:12px;
   padding: 6px 6px 12px;
 }
+
 .panel-title{
   font-size: 18px;
-  font-weight: 860;
+  font-weight: 900;
 }
+
 .panel-sub{
   margin-top: 4px;
   font-size: 12px;
@@ -153,6 +175,7 @@ body{
 }
 
 .stack{ display:flex; flex-direction:column; gap:12px; }
+
 .grid2{
   display:grid;
   grid-template-columns: 1fr 1fr;
@@ -171,18 +194,19 @@ input, .select, .textarea{
   padding: 12px 12px;
   border-radius: 14px;
   border: 1px solid rgba(11,18,32,.10);
-  background: rgba(255,255,255,.72);
+  background: rgba(255,255,255,.74);
   outline:none;
   transition: border-color .18s ease, box-shadow .18s ease, transform .18s ease;
 }
+
 .textarea{
   min-height: 90px;
   resize: vertical;
 }
 
 input:focus, .select:focus, .textarea:focus{
-  border-color: rgba(0,168,107,.55);
-  box-shadow: 0 0 0 6px rgba(0,168,107,.10);
+  border-color: rgba(0,168,107,.58);
+  box-shadow: 0 0 0 7px rgba(0,168,107,.10);
 }
 
 /* Buttons */
@@ -196,20 +220,20 @@ input:focus, .select:focus, .textarea:focus{
   transition: transform .12s ease, box-shadow .18s ease, background .18s ease, border-color .18s ease;
 }
 .btn:hover{
-  background: rgba(255,255,255,.82);
-  border-color: rgba(0,168,107,.28);
+  background: rgba(255,255,255,.84);
+  border-color: rgba(0,168,107,.32);
 }
 .btn:active{ transform: translateY(1px); }
 
 .btn-primary{
-  border-color: rgba(0,168,107,.55);
+  border-color: rgba(0,168,107,.62);
   background: linear-gradient(135deg, var(--accent), var(--accent-2));
-  color: white;
+  color: #fff;
   box-shadow: 0 20px 55px rgba(0,168,107,.18);
 }
 .btn-primary:hover{ filter: brightness(1.03); }
 
-.btn-ghost{ background: rgba(255,255,255,.40); }
+.btn-ghost{ background: rgba(255,255,255,.44); }
 
 .hint{ font-size: 12px; color: var(--muted); }
 .error{ color: rgba(220, 38, 38, .92); }
@@ -219,10 +243,8 @@ input:focus, .select:focus, .textarea:focus{
   display:flex;
   gap:10px;
   padding: 10px;
-  border-radius: var(--r);
-  border: 1px solid rgba(11,18,32,.10);
-  background: rgba(255,255,255,.55);
 }
+
 .tab-btn{
   flex:1;
   display:flex;
@@ -236,26 +258,27 @@ input:focus, .select:focus, .textarea:focus{
   cursor:pointer;
   transition: transform .12s ease, background .18s ease, border-color .18s ease, box-shadow .18s ease;
 }
+
 .tab-dot{
   width: 10px; height: 10px;
   border-radius: 999px;
-  background: rgba(0,168,107,.26);
-  border: 1px solid rgba(0,168,107,.32);
+  background: rgba(0,168,107,.22);
+  border: 1px solid rgba(0,168,107,.28);
 }
-.tab-btn:hover{
-  box-shadow: 0 12px 30px rgba(11,18,32,.08);
-}
+
+.tab-btn:hover{ box-shadow: 0 12px 30px rgba(11,18,32,.08); }
 .tab-btn.active{
-  border-color: rgba(0,168,107,.40);
+  border-color: rgba(0,168,107,.44);
   background: rgba(0,168,107,.10);
 }
 .tab-btn.active .tab-dot{
   background: var(--accent);
   border-color: rgba(255,255,255,.70);
 }
+
 .tab-panel{ margin-top: 12px; }
 
-/* Toolbars */
+/* Toolbar */
 .toolbar{
   display:flex;
   align-items:center;
@@ -263,8 +286,9 @@ input:focus, .select:focus, .textarea:focus{
   gap:12px;
   padding: 12px;
 }
+
 .toolbar-left{ display:flex; align-items:baseline; gap:14px; }
-.toolbar-title{ font-weight: 880; font-size: 16px; }
+.toolbar-title{ font-weight: 900; font-size: 16px; }
 .toolbar-sub{ font-size: 12px; color: var(--muted); }
 .toolbar-right{ display:flex; gap:10px; align-items:center; }
 
@@ -276,11 +300,12 @@ input:focus, .select:focus, .textarea:focus{
   margin-top: 12px;
   font-size: 12px;
   color: rgba(11,18,32,.55);
+  padding: 10px;
 }
 .weekdays > div{
   padding: 10px 12px;
   border-radius: 14px;
-  border: 1px solid rgba(11,18,32,.10);
+  border: 1px solid rgba(11,18,32,.08);
   background: rgba(255,255,255,.56);
 }
 
@@ -293,7 +318,7 @@ input:focus, .select:focus, .textarea:focus{
 }
 
 .day{
-  min-height: 152px;
+  min-height: 156px;
   border-radius: 18px;
   border: 1px solid rgba(11,18,32,.10);
   background: rgba(255,255,255,.56);
@@ -310,7 +335,7 @@ input:focus, .select:focus, .textarea:focus{
 }
 .day.muted-day{ opacity: .50; }
 .day.today{
-  border-color: rgba(0,168,107,.55);
+  border-color: rgba(0,168,107,.60);
   box-shadow: 0 18px 60px rgba(0,168,107,.10);
 }
 
@@ -322,12 +347,12 @@ input:focus, .select:focus, .textarea:focus{
 }
 .day-num{
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 950;
   color: rgba(11,18,32,.82);
 }
 .day-count{
   font-size: 11px;
-  padding: 6px 8px;
+  padding: 6px 9px;
   border-radius: 999px;
   border: 1px solid rgba(11,18,32,.10);
   background: rgba(255,255,255,.62);
@@ -336,7 +361,6 @@ input:focus, .select:focus, .textarea:focus{
 
 .events{ display:flex; flex-direction:column; gap:9px; }
 
-/* Clickable event blocks */
 .event{
   border-radius: 16px;
   border: 1px solid rgba(11,18,32,.10);
@@ -365,7 +389,7 @@ input:focus, .select:focus, .textarea:focus{
 .event.leave{ background: var(--leave-bg); border-color: rgba(245,158,11,.22); }
 .event.leave::before{ background: var(--leave-line); }
 
-/* status contrast (very clear) */
+/* status contrast */
 .event.temp{
   outline: 2px dashed var(--temp-line);
   outline-offset: -2px;
@@ -377,7 +401,7 @@ input:focus, .select:focus, .textarea:focus{
 
 .event-title{
   font-size: 12px;
-  font-weight: 900;
+  font-weight: 950;
   color: rgba(11,18,32,.86);
   white-space: nowrap;
   overflow:hidden;
@@ -466,10 +490,10 @@ input:focus, .select:focus, .textarea:focus{
   cursor:pointer;
   transition: background .18s ease, border-color .18s ease;
 }
-.filter-btn:hover{ border-color: rgba(0,168,107,.28); }
+.filter-btn:hover{ border-color: rgba(0,168,107,.32); }
 .filter-btn.active{
   background: rgba(0,168,107,.10);
-  border-color: rgba(0,168,107,.40);
+  border-color: rgba(0,168,107,.44);
 }
 .mini{
   display:flex;
@@ -518,7 +542,7 @@ input:focus, .select:focus, .textarea:focus{
 }
 .task-main{ flex:1; }
 .task-text{
-  font-weight: 900;
+  font-weight: 950;
   font-size: 13px;
   color: rgba(11,18,32,.88);
 }
@@ -541,7 +565,7 @@ input:focus, .select:focus, .textarea:focus{
   background: rgba(255,255,255,.66);
 }
 .pill.assignee{
-  border-color: rgba(0,168,107,.32);
+  border-color: rgba(0,168,107,.34);
   background: rgba(0,168,107,.08);
 }
 .pill.note{
@@ -561,8 +585,8 @@ input:focus, .select:focus, .textarea:focus{
   position: fixed;
   inset: 0;
   background: rgba(11,18,32,.18);
-  backdrop-filter: blur(8px);
-  -webkit-backdrop-filter: blur(8px);
+  backdrop-filter: blur(10px);
+  -webkit-backdrop-filter: blur(10px);
 }
 .modal{
   position: fixed;
@@ -579,7 +603,7 @@ input:focus, .select:focus, .textarea:focus{
   gap:10px;
   padding: 8px 6px 10px;
 }
-.modal-title{ font-weight: 900; }
+.modal-title{ font-weight: 950; }
 .modal-actions{
   display:flex;
   justify-content:flex-end;

@@ -8,9 +8,11 @@
 </head>
 <body>
   <main class="shell">
+    <!-- Sticky header met logo (blijft altijd zichtbaar) -->
     <header class="topbar glass">
       <div class="brand">
-        <div class="brand-mark"></div>
+        <!-- Logo (zet in /assets/) -->
+        <img class="brand-logo" src="assets/logo.png" alt="Dormatec logo" />
         <div class="brand-text">
           <div class="brand-title">Dormatec</div>
           <div class="brand-sub">Planning & Taken</div>
@@ -50,7 +52,7 @@
 
     <!-- APP -->
     <section id="appCard" class="panel glass hidden">
-      <div class="tabs">
+      <div class="tabs glass-soft">
         <button class="tab-btn active" data-tab="agenda">
           <span class="tab-dot"></span> Agenda
         </button>
@@ -73,7 +75,7 @@
           </div>
         </div>
 
-        <div class="weekdays">
+        <div class="weekdays glass-soft">
           <div>Ma</div><div>Di</div><div>Wo</div><div>Do</div><div>Vr</div><div>Za</div><div>Zo</div>
         </div>
 
