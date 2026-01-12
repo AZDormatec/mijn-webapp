@@ -9,19 +9,25 @@
 <body>
   <main class="container">
     <header class="header">
-      <h1>Dormatec</h1>
-      <p class="sub">Alles wordt lokaal opgeslagen in je browser.</p>
+      <a class="brand" href="https://dev.dormatec.eu/#" target="_blank" rel="noopener">
+        <!-- Zorg dat je logo.svg in dezelfde map staat als index.html -->
+        <img class="brand-logo" src="logo.svg" alt="Dormatec logo" />
+        <div class="brand-text">
+          <h1>Dormatec</h1>
+          <p class="sub">Takenlijst (lokaal opgeslagen in je browser)</p>
+        </div>
+      </a>
     </header>
 
     <section class="card">
       <form id="taskForm" class="row">
         <input id="taskInput" type="text" placeholder="Nieuwe taak..." autocomplete="off" />
-        <button type="submit">Toevoegen</button>
+        <button type="submit" class="btn btn-primary">Toevoegen</button>
       </form>
 
       <div class="row row-between">
         <div class="muted" id="counter">0 taken</div>
-        <button id="clearDoneBtn" class="secondary" type="button">Verwijder afgerond</button>
+        <button id="clearDoneBtn" class="btn btn-ghost" type="button">Verwijder afgerond</button>
       </div>
 
       <div class="row filters">
