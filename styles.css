@@ -64,4 +64,13 @@ button.secondary { background: transparent; }
   padding: 8px 10px;
   border-radius: 10px;
 }
+
+/* Filters */
+.filters { margin-top: 10px; flex-wrap: wrap; }
+.filter-btn { background: transparent; }
+.filter-btn.active {
+  background: rgba(255,255,255,0.18);
+  border-color: rgba(255,255,255,0.28);
+}
+
 .footer { margin-top: 18px; color: #b6c0d1; }

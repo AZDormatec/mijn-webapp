@@ -8,6 +8,20 @@ const clearDoneBtn = document.getElementById("clearDoneBtn");
 
 let tasks = loadTasks();
 
+// Filters
+let currentFilter = "all";
+const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
+filterButtons.forEach(btn => {
+  btn.addEventListener("click", () => {
+    currentFilter = btn.dataset.filter;
+
+    filterButtons.forEach(b => b.classList.remove("active"));
+    btn.classList.add("active");
+
+    render();
+  });
+});
+
 function uid() {
   return Math.random().toString(16).slice(2) + Date.now().toString(16);
 }
@@ -25,10 +39,18 @@ function saveTasks() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify(tasks));
 }
 
+function getVisibleTasks() {
+  if (currentFilter === "open") return tasks.filter(t => !t.done);
+  if (currentFilter === "done") return tasks.filter(t => t.done);
+  return tasks;
+}
+
 function render() {
   taskList.innerHTML = "";
 
-  for (const t of tasks) {
+  const visibleTasks = getVisibleTasks();
+
+  for (const t of visibleTasks) {
     const li = document.createElement("li");
     li.className = "item" + (t.done ? " done" : "");
 
