@@ -13,7 +13,7 @@
         <div class="brand-mark"></div>
         <div class="brand-text">
           <div class="brand-title">Dormatec</div>
-          <div class="brand-sub">Planning & Taken (secure)</div>
+          <div class="brand-sub">Planning & Taken</div>
         </div>
       </div>
 
@@ -28,7 +28,7 @@
       <div class="panel-head">
         <div>
           <div class="panel-title">Inloggen</div>
-          <div class="panel-sub">Gebruik je Dormatec e-mail + wachtwoord</div>
+          <div class="panel-sub">Beveiligde omgeving</div>
         </div>
       </div>
 
@@ -101,6 +101,7 @@
 
         <form id="taskForm" class="task-create glass-soft">
           <input id="taskInput" type="text" placeholder="Nieuwe taak..." autocomplete="off" />
+          <input id="taskNoteInput" type="text" placeholder="Notitie (optioneel)..." />
           <input id="assigneeInput" type="email" placeholder="Toewijzen aan (email)..." list="assigneesList" />
           <datalist id="assigneesList"></datalist>
           <button type="submit" class="btn btn-primary">Toevoegen</button>
@@ -128,7 +129,7 @@
     </section>
 
     <footer class="footer">
-      <small>Pages staat uit totdat jij publiceert</small>
+      <small>Interne omgeving</small>
     </footer>
   </main>
 
@@ -137,7 +138,7 @@
 
   <div id="eventModal" class="modal glass hidden" role="dialog" aria-modal="true">
     <div class="modal-head">
-      <div class="modal-title" id="modalTitle">Planning toevoegen</div>
+      <div class="modal-title" id="modalTitle">Planning</div>
       <button id="closeModalBtn" class="btn btn-ghost" type="button">✕</button>
     </div>
 
@@ -158,6 +159,11 @@
       <label class="field" id="orderWrap">
         <span>Ordernummer</span>
         <input id="orderInput" type="text" placeholder="Bijv. ORD-12345" />
+      </label>
+
+      <label class="field">
+        <span>Notities</span>
+        <textarea id="eventNotes" class="textarea" placeholder="Bijv. toegang, contactpersoon, bijzonderheden..."></textarea>
       </label>
 
       <div class="grid2">

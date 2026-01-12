@@ -21,9 +21,7 @@ import {
   getDocs
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
-/* =========================
-   Firebase config (jouw project)
-========================= */
+/* Firebase config */
 const firebaseConfig = {
   apiKey: "AIzaSyCOvBIrruUuuTrtF2sJP0CatLnhL1Y0jLQ",
   authDomain: "dormatec-app.firebaseapp.com",
@@ -38,9 +36,7 @@ const fbApp = initializeApp(firebaseConfig);
 const auth = getAuth(fbApp);
 const db = getFirestore(fbApp);
 
-/* =========================
-   UI refs
-========================= */
+/* UI */
 const loginCard = document.getElementById("loginCard");
 const appCard = document.getElementById("appCard");
 
@@ -52,14 +48,14 @@ const loginError = document.getElementById("loginError");
 const userInfo = document.getElementById("userInfo");
 const logoutBtn = document.getElementById("logoutBtn");
 
-// Tabs
 const tabButtons = Array.from(document.querySelectorAll(".tab-btn"));
 const tabTasks = document.getElementById("tabTasks");
 const tabAgenda = document.getElementById("tabAgenda");
 
-// Tasks UI
+/* Tasks */
 const taskForm = document.getElementById("taskForm");
 const taskInput = document.getElementById("taskInput");
+const taskNoteInput = document.getElementById("taskNoteInput");
 const assigneeInput = document.getElementById("assigneeInput");
 const assigneesList = document.getElementById("assigneesList");
 const assigneeFilter = document.getElementById("assigneeFilter");
@@ -69,14 +65,14 @@ const counter = document.getElementById("counter");
 const clearDoneBtn = document.getElementById("clearDoneBtn");
 const filterButtons = Array.from(document.querySelectorAll(".filter-btn"));
 
-// Agenda UI
+/* Agenda */
 const monthTitle = document.getElementById("monthTitle");
 const calendarGrid = document.getElementById("calendarGrid");
 const prevMonthBtn = document.getElementById("prevMonthBtn");
 const nextMonthBtn = document.getElementById("nextMonthBtn");
 const addEventBtn = document.getElementById("addEventBtn");
 
-// Modal UI
+/* Modal */
 const modalBackdrop = document.getElementById("modalBackdrop");
 const eventModal = document.getElementById("eventModal");
 const closeModalBtn = document.getElementById("closeModalBtn");
@@ -88,6 +84,7 @@ const eventType = document.getElementById("eventType");
 const techInput = document.getElementById("techInput");
 const orderWrap = document.getElementById("orderWrap");
 const orderInput = document.getElementById("orderInput");
+const eventNotes = document.getElementById("eventNotes");
 const startDate = document.getElementById("startDate");
 const startTime = document.getElementById("startTime");
 const endDate = document.getElementById("endDate");
@@ -95,45 +92,35 @@ const endTime = document.getElementById("endTime");
 const statusSelect = document.getElementById("statusSelect");
 const eventError = document.getElementById("eventError");
 
-/* =========================
-   State
-========================= */
+/* State */
 let currentUserId = null;
+let currentUserEmail = null;
 
-// Tasks (Firestore shared)
-let allTasks = [];          // all tasks from Firestore
+/* Tasks */
+let allTasks = [];
 let taskStatusFilter = "all";
 let taskAssigneeFilter = "__all__";
 let unsubTasks = null;
 
-// Agenda (Firestore shared)
+/* Agenda */
 let calendarMonth = new Date();
 calendarMonth.setDate(1);
 let monthEvents = [];
 let unsubMonth = null;
+let editingEventId = null;
 
-/* =========================
-   Helpers
-========================= */
+/* Helpers */
 function pad2(n){ return String(n).padStart(2, "0"); }
-function ymd(d){
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`;
-}
-function monthKey(d){
-  return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`;
-}
+function ymd(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}-${pad2(d.getDate())}`; }
+function monthKey(d){ return `${d.getFullYear()}-${pad2(d.getMonth()+1)}`; }
 function parseLocalDateTime(dateStr, timeStr){
   const [y,m,da] = dateStr.split("-").map(Number);
   const [hh,mm] = timeStr.split(":").map(Number);
   return new Date(y, m-1, da, hh, mm, 0, 0);
 }
-function addDays(d, days){
-  const x = new Date(d); x.setDate(x.getDate() + days); return x;
-}
+function addDays(d, days){ const x = new Date(d); x.setDate(x.getDate()+days); return x; }
+function normalizeEmail(x){ return (x || "").trim().toLowerCase(); }
 
-/* =========================
-   Tabs
-========================= */
 function setTab(tabName){
   tabButtons.forEach(b => b.classList.toggle("active", b.dataset.tab === tabName));
   tabTasks.classList.toggle("hidden", tabName !== "tasks");
@@ -141,15 +128,13 @@ function setTab(tabName){
 }
 tabButtons.forEach(btn => btn.addEventListener("click", () => setTab(btn.dataset.tab)));
 
-/* =========================
-   AUTH
-========================= */
+/* Auth */
 function showLoggedOut(){
   loginCard.classList.remove("hidden");
   appCard.classList.add("hidden");
   loginError.textContent = "";
-  userInfo.textContent = "Ingelogd";
   currentUserId = null;
+  currentUserEmail = null;
 
   if (unsubTasks) { unsubTasks(); unsubTasks = null; }
   if (unsubMonth) { unsubMonth(); unsubMonth = null; }
@@ -158,17 +143,16 @@ function showLoggedOut(){
   counter.textContent = "0 taken";
   calendarGrid.innerHTML = "";
 }
-
 function showLoggedIn(user){
   loginCard.classList.add("hidden");
   appCard.classList.remove("hidden");
-  userInfo.textContent = `Ingelogd: ${user.email}`;
-  currentUserId = user.uid;
 
-  // default tab
+  currentUserId = user.uid;
+  currentUserEmail = user.email || "";
+  userInfo.textContent = `Ingelogd: ${currentUserEmail}`;
+
   setTab("agenda");
 
-  // Start listeners
   listenTasks();
   calendarMonth = new Date(); calendarMonth.setDate(1);
   listenMonth();
@@ -183,43 +167,31 @@ onAuthStateChanged(auth, (user) => {
 loginForm.addEventListener("submit", async (e) => {
   e.preventDefault();
   loginError.textContent = "";
-
-  const email = emailInput.value.trim();
-  const password = passwordInput.value;
-
   try {
-    await signInWithEmailAndPassword(auth, email, password);
+    await signInWithEmailAndPassword(auth, emailInput.value.trim(), passwordInput.value);
     passwordInput.value = "";
   } catch {
     loginError.textContent = "Inloggen mislukt. Controleer e-mail en wachtwoord.";
   }
 });
 
-logoutBtn.addEventListener("click", async () => {
-  await signOut(auth);
-});
+logoutBtn.addEventListener("click", async () => { await signOut(auth); });
 
 /* =========================
-   TASKS (shared via Firestore)
+   TASKS (Firestore shared) + notes
 ========================= */
-function normalizeEmail(x){
-  return (x || "").trim().toLowerCase();
-}
-
 function applyTaskFilters(tasks){
-  let visible = tasks;
-
-  if (taskStatusFilter === "open") visible = visible.filter(t => !t.done);
-  if (taskStatusFilter === "done") visible = visible.filter(t => !!t.done);
+  let v = tasks;
+  if (taskStatusFilter === "open") v = v.filter(t => !t.done);
+  if (taskStatusFilter === "done") v = v.filter(t => !!t.done);
 
   if (taskAssigneeFilter !== "__all__") {
-    visible = visible.filter(t => normalizeEmail(t.assigneeEmail) === normalizeEmail(taskAssigneeFilter));
+    v = v.filter(t => normalizeEmail(t.assigneeEmail) === normalizeEmail(taskAssigneeFilter));
   }
-  return visible;
+  return v;
 }
 
 function refreshAssigneeUI(){
-  // Build unique assignees from allTasks
   const set = new Set();
   for (const t of allTasks) {
     const a = normalizeEmail(t.assigneeEmail);
@@ -227,7 +199,6 @@ function refreshAssigneeUI(){
   }
   const assignees = Array.from(set).sort();
 
-  // datalist for quick entry
   assigneesList.innerHTML = "";
   for (const a of assignees) {
     const opt = document.createElement("option");
@@ -235,7 +206,6 @@ function refreshAssigneeUI(){
     assigneesList.appendChild(opt);
   }
 
-  // filter select
   const current = assigneeFilter.value || "__all__";
   assigneeFilter.innerHTML = `<option value="__all__">Iedereen</option>`;
   for (const a of assignees) {
@@ -244,7 +214,6 @@ function refreshAssigneeUI(){
     opt.textContent = a;
     assigneeFilter.appendChild(opt);
   }
-  // restore selection if possible
   assigneeFilter.value = assignees.includes(current) ? current : "__all__";
   taskAssigneeFilter = assigneeFilter.value;
 }
@@ -278,16 +247,24 @@ function renderTasks(){
     meta.className = "task-meta";
 
     const assignee = normalizeEmail(t.assigneeEmail) ? t.assigneeEmail : "—";
-    const pill = document.createElement("span");
-    pill.className = "pill assignee";
-    pill.textContent = `Toegewezen: ${assignee}`;
+    const pillA = document.createElement("span");
+    pillA.className = "pill assignee";
+    pillA.textContent = `Toegewezen: ${assignee}`;
 
-    const created = document.createElement("span");
-    created.className = "pill";
-    created.textContent = t.createdByEmail ? `Door: ${t.createdByEmail}` : "Door: —";
+    const pillC = document.createElement("span");
+    pillC.className = "pill";
+    pillC.textContent = t.createdByEmail ? `Door: ${t.createdByEmail}` : "Door: —";
 
-    meta.appendChild(pill);
-    meta.appendChild(created);
+    meta.appendChild(pillA);
+
+    if ((t.note || "").trim()) {
+      const pillN = document.createElement("span");
+      pillN.className = "pill note";
+      pillN.textContent = `Notitie: ${t.note}`;
+      meta.appendChild(pillN);
+    }
+
+    meta.appendChild(pillC);
 
     main.appendChild(text);
     main.appendChild(meta);
@@ -308,16 +285,13 @@ function renderTasks(){
     taskList.appendChild(li);
   }
 
-  // Counter shows visible/total
   counter.textContent = `${visible.length} zichtbaar • ${allTasks.length} totaal`;
 }
 
 function listenTasks(){
   if (unsubTasks) unsubTasks();
 
-  const col = collection(db, "tasks");
-  const q = query(col, orderBy("createdAt", "desc"));
-
+  const q = query(collection(db, "tasks"), orderBy("createdAt", "desc"));
   unsubTasks = onSnapshot(q, (snap) => {
     allTasks = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     refreshAssigneeUI();
@@ -346,85 +320,37 @@ taskForm.addEventListener("submit", async (e) => {
   const text = taskInput.value.trim();
   if (!text) return;
 
+  const note = taskNoteInput.value.trim();
   const assigneeEmail = assigneeInput.value.trim();
-
-  // We pakken email uit het loginveld voor "createdByEmail" (makkelijk en bruikbaar)
-  const createdByEmail = (userInfo.textContent || "").replace("Ingelogd: ", "").trim();
 
   await addDoc(collection(db, "tasks"), {
     text,
+    note,
     done: false,
     assigneeEmail,
     createdBy: currentUserId,
-    createdByEmail,
+    createdByEmail: currentUserEmail,
     createdAt: serverTimestamp()
   });
 
   taskInput.value = "";
+  taskNoteInput.value = "";
   assigneeInput.value = "";
 });
 
 clearDoneBtn.addEventListener("click", async () => {
-  // delete all done tasks (shared)
-  // Let op: bij grote aantallen is dit zwaarder; voor nu prima.
   const q = query(collection(db, "tasks"), where("done", "==", true));
   const snap = await getDocs(q);
-  const promises = snap.docs.map(d => deleteDoc(doc(db, "tasks", d.id)));
-  await Promise.all(promises);
+  await Promise.all(snap.docs.map(d => deleteDoc(doc(db, "tasks", d.id))));
 });
 
 /* =========================
-   MODAL (Agenda)
-========================= */
-function openModal(){
-  modalBackdrop.classList.remove("hidden");
-  eventModal.classList.remove("hidden");
-}
-function closeModal(){
-  modalBackdrop.classList.add("hidden");
-  eventModal.classList.add("hidden");
-  eventError.textContent = "";
-  eventForm.reset();
-  eventType.value = "install";
-  statusSelect.value = "temp";
-  orderWrap.classList.remove("hidden");
-}
-function syncOrderVisibility(){
-  if (eventType.value === "leave") {
-    orderWrap.classList.add("hidden");
-    orderInput.value = "";
-  } else {
-    orderWrap.classList.remove("hidden");
-  }
-}
-eventType.addEventListener("change", syncOrderVisibility);
-
-closeModalBtn.addEventListener("click", closeModal);
-cancelModalBtn.addEventListener("click", closeModal);
-modalBackdrop.addEventListener("click", closeModal);
-
-addEventBtn.addEventListener("click", () => {
-  modalTitle.textContent = "Planning toevoegen";
-  const now = new Date();
-  const today = ymd(now);
-  startDate.value = today;
-  endDate.value = today;
-  startTime.value = "08:00";
-  endTime.value = "17:00";
-  eventType.value = "install";
-  statusSelect.value = "temp";
-  syncOrderVisibility();
-  openModal();
-});
-
-/* =========================
-   Firestore: Agenda
+   AGENDA (Firestore shared) + edit + notes
 ========================= */
 function computeMonthKeys(start, end){
   const keys = new Set();
   const a = new Date(start); a.setDate(1); a.setHours(0,0,0,0);
   const b = new Date(end); b.setDate(1); b.setHours(0,0,0,0);
-
   let cur = new Date(a);
   while (cur <= b) {
     keys.add(monthKey(cur));
@@ -438,9 +364,7 @@ function listenMonth(){
   if (unsubMonth) unsubMonth();
 
   const mk = monthKey(calendarMonth);
-  const col = collection(db, "scheduleEvents");
-  const q = query(col, where("monthKeys", "array-contains", mk));
-
+  const q = query(collection(db, "scheduleEvents"), where("monthKeys", "array-contains", mk));
   unsubMonth = onSnapshot(q, (snap) => {
     monthEvents = snap.docs.map(d => ({ id: d.id, ...d.data() }));
     renderCalendar();
@@ -463,28 +387,87 @@ nextMonthBtn.addEventListener("click", () => {
 const MONTHS_NL = ["januari","februari","maart","april","mei","juni","juli","augustus","september","oktober","november","december"];
 
 function eventTouchesDay(ev, day){
-  const start = ev.startTS?.toDate ? ev.startTS.toDate() : new Date(ev.startISO);
-  const end = ev.endTS?.toDate ? ev.endTS.toDate() : new Date(ev.endISO);
-
+  const start = new Date(ev.startISO);
+  const end = new Date(ev.endISO);
   const dayStart = new Date(day); dayStart.setHours(0,0,0,0);
   const dayEnd = new Date(day); dayEnd.setHours(23,59,59,999);
-
   return (start <= dayEnd) && (end >= dayStart);
 }
 
 function formatTimeRange(ev){
-  const start = ev.startTS?.toDate ? ev.startTS.toDate() : new Date(ev.startISO);
-  const end = ev.endTS?.toDate ? ev.endTS.toDate() : new Date(ev.endISO);
-  const s = `${pad2(start.getHours())}:${pad2(start.getMinutes())}`;
-  const e = `${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
-  return `${s}–${e}`;
+  const start = new Date(ev.startISO);
+  const end = new Date(ev.endISO);
+  return `${pad2(start.getHours())}:${pad2(start.getMinutes())}–${pad2(end.getHours())}:${pad2(end.getMinutes())}`;
 }
+
+function openModal(){
+  modalBackdrop.classList.remove("hidden");
+  eventModal.classList.remove("hidden");
+}
+function closeModal(){
+  modalBackdrop.classList.add("hidden");
+  eventModal.classList.add("hidden");
+  eventError.textContent = "";
+  eventForm.reset();
+  eventType.value = "install";
+  statusSelect.value = "temp";
+  orderWrap.classList.remove("hidden");
+  editingEventId = null;
+}
+function syncOrderVisibility(){
+  if (eventType.value === "leave") {
+    orderWrap.classList.add("hidden");
+    orderInput.value = "";
+  } else {
+    orderWrap.classList.remove("hidden");
+  }
+}
+eventType.addEventListener("change", syncOrderVisibility);
+closeModalBtn.addEventListener("click", closeModal);
+cancelModalBtn.addEventListener("click", closeModal);
+modalBackdrop.addEventListener("click", closeModal);
+
+function setModalFromEvent(ev){
+  editingEventId = ev.id;
+  modalTitle.textContent = "Planning wijzigen";
+  eventType.value = ev.type || "install";
+  techInput.value = ev.tech || "";
+  orderInput.value = ev.orderNo || "";
+  eventNotes.value = ev.notes || "";
+  statusSelect.value = ev.status || "temp";
+
+  const s = new Date(ev.startISO);
+  const e = new Date(ev.endISO);
+  startDate.value = ymd(s);
+  endDate.value = ymd(e);
+  startTime.value = `${pad2(s.getHours())}:${pad2(s.getMinutes())}`;
+  endTime.value = `${pad2(e.getHours())}:${pad2(e.getMinutes())}`;
+
+  syncOrderVisibility();
+  openModal();
+}
+
+addEventBtn.addEventListener("click", () => {
+  editingEventId = null;
+  modalTitle.textContent = "Planning toevoegen";
+
+  const today = ymd(new Date());
+  startDate.value = today;
+  endDate.value = today;
+  startTime.value = "08:00";
+  endTime.value = "17:00";
+  eventType.value = "install";
+  statusSelect.value = "temp";
+  eventNotes.value = "";
+  syncOrderVisibility();
+  openModal();
+});
 
 function renderCalendar(){
   monthTitle.textContent = `${MONTHS_NL[calendarMonth.getMonth()]} ${calendarMonth.getFullYear()}`;
 
   const first = new Date(calendarMonth);
-  const dow = (first.getDay() + 6) % 7; // Mon=0..Sun=6
+  const dow = (first.getDay() + 6) % 7;
   const gridStart = addDays(first, -dow);
 
   const todayYmd = ymd(new Date());
@@ -504,31 +487,27 @@ function renderCalendar(){
     num.className = "day-num";
     num.textContent = day.getDate();
 
-    const chip = document.createElement("div");
-    chip.className = "day-chip";
-    chip.textContent = inMonth ? "" : " ";
+    const todays = monthEvents
+      .filter(ev => eventTouchesDay(ev, day))
+      .sort((a,b) => new Date(a.startISO) - new Date(b.startISO));
+
+    const count = document.createElement("div");
+    count.className = "day-count";
+    count.textContent = todays.length ? `${todays.length}` : " ";
 
     head.appendChild(num);
-    head.appendChild(chip);
+    head.appendChild(count);
 
     const eventsWrap = document.createElement("div");
     eventsWrap.className = "events";
 
-    const todays = monthEvents
-      .filter(ev => eventTouchesDay(ev, day))
-      .sort((a,b) => {
-        const as = a.startTS?.toDate ? a.startTS.toDate() : new Date(a.startISO);
-        const bs = b.startTS?.toDate ? b.startTS.toDate() : new Date(b.startISO);
-        return as - bs;
-      });
-
     for (const ev of todays.slice(0, 3)) {
       const block = document.createElement("div");
       block.className = `event ${ev.type} ${ev.status}`;
+      block.addEventListener("click", () => setModalFromEvent(ev));
 
       const title = document.createElement("div");
       title.className = "event-title";
-
       title.textContent = ev.type === "leave"
         ? `Verlof • ${ev.tech}`
         : `${ev.tech} • ${ev.orderNo || "Geen order"}`;
@@ -544,6 +523,13 @@ function renderCalendar(){
 
       block.appendChild(title);
       block.appendChild(meta);
+
+      if ((ev.notes || "").trim()) {
+        const n = document.createElement("div");
+        n.className = "event-notes";
+        n.textContent = ev.notes;
+        block.appendChild(n);
+      }
 
       eventsWrap.appendChild(block);
     }
@@ -571,6 +557,7 @@ eventForm.addEventListener("submit", async (e) => {
   const tech = techInput.value.trim();
   const orderNo = orderInput.value.trim();
   const status = statusSelect.value;
+  const notes = (eventNotes.value || "").trim();
 
   if (!tech) { eventError.textContent = "Vul een monteur/collega in."; return; }
   if (type === "install" && !orderNo) { eventError.textContent = "Vul een ordernummer in (installatie)."; return; }
@@ -582,17 +569,31 @@ eventForm.addEventListener("submit", async (e) => {
 
   const mk = computeMonthKeys(start, end);
 
-  await addDoc(collection(db, "scheduleEvents"), {
-    type,
-    tech,
-    orderNo: type === "install" ? orderNo : "",
-    status,
-    startISO: start.toISOString(),
-    endISO: end.toISOString(),
-    monthKeys: mk,
-    createdBy: currentUserId,
-    createdAt: serverTimestamp()
-  });
+  if (editingEventId) {
+    await updateDoc(doc(db, "scheduleEvents", editingEventId), {
+      type,
+      tech,
+      orderNo: type === "install" ? orderNo : "",
+      status,
+      notes,
+      startISO: start.toISOString(),
+      endISO: end.toISOString(),
+      monthKeys: mk
+    });
+  } else {
+    await addDoc(collection(db, "scheduleEvents"), {
+      type,
+      tech,
+      orderNo: type === "install" ? orderNo : "",
+      status,
+      notes,
+      startISO: start.toISOString(),
+      endISO: end.toISOString(),
+      monthKeys: mk,
+      createdBy: currentUserId,
+      createdAt: serverTimestamp()
+    });
+  }
 
   closeModal();
 });
