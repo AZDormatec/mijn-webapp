@@ -7,205 +7,440 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="shell">
-    <!-- Sticky header met logo (blijft altijd zichtbaar) -->
+  <main class="app-shell">
+    <!-- Topbar -->
     <header class="topbar glass">
       <div class="brand">
-        <!-- Logo (zet in /assets/) -->
         <img class="brand-logo" src="assets/logo.png" alt="Dormatec logo" />
         <div class="brand-text">
           <div class="brand-title">Dormatec</div>
-          <div class="brand-sub">Planning & Taken</div>
+          <div class="brand-sub">Service Desk • Planning • Dashboard</div>
         </div>
       </div>
 
       <div class="topbar-right">
-        <div class="user-pill" id="userInfo">Ingelogd</div>
+        <div class="user-pill" id="userInfo">Niet ingelogd</div>
         <button id="logoutBtn" class="btn btn-ghost" type="button">Uitloggen</button>
       </div>
     </header>
 
-    <!-- LOGIN -->
-    <section id="loginCard" class="panel glass">
-      <div class="panel-head">
-        <div>
-          <div class="panel-title">Inloggen</div>
-          <div class="panel-sub">Beveiligde omgeving</div>
-        </div>
-      </div>
-
-      <form id="loginForm" class="stack">
-        <label class="field">
-          <span>E-mail</span>
-          <input id="emailInput" type="email" placeholder="naam@bedrijf.nl" autocomplete="username" required />
-        </label>
-
-        <label class="field">
-          <span>Wachtwoord</span>
-          <input id="passwordInput" type="password" placeholder="••••••••" autocomplete="current-password" required />
-        </label>
-
-        <button class="btn btn-primary" type="submit">Inloggen</button>
-        <div id="loginError" class="hint error" aria-live="polite"></div>
-      </form>
-    </section>
-
-    <!-- APP -->
-    <section id="appCard" class="panel glass hidden">
-      <div class="tabs glass-soft">
-        <button class="tab-btn active" data-tab="agenda">
-          <span class="tab-dot"></span> Agenda
+    <!-- Layout -->
+    <section class="layout">
+      <!-- Sidebar -->
+      <aside class="sidebar glass">
+        <button class="nav-btn active" data-view="dashboard">
+          <span class="nav-dot"></span> Dashboard
         </button>
-        <button class="tab-btn" data-tab="tasks">
-          <span class="tab-dot"></span> Taken
+        <button class="nav-btn" data-view="tickets">
+          <span class="nav-dot"></span> Tickets
         </button>
-      </div>
+        <button class="nav-btn" data-view="planning">
+          <span class="nav-dot"></span> Planning & Belasting
+        </button>
+        <button class="nav-btn" data-view="intake">
+          <span class="nav-dot"></span> Intake (Sales → Binnendienst)
+        </button>
 
-      <!-- TAB: Agenda -->
-      <section id="tabAgenda" class="tab-panel">
-        <div class="toolbar glass-soft">
-          <div class="toolbar-left">
-            <button id="prevMonthBtn" class="btn btn-ghost" type="button">◀</button>
-            <div class="toolbar-title" id="monthTitle">Maand</div>
-            <button id="nextMonthBtn" class="btn btn-ghost" type="button">▶</button>
-          </div>
-
-          <div class="toolbar-right">
-            <button id="addEventBtn" class="btn btn-primary" type="button">+ Toevoegen</button>
+        <div class="sidebar-foot">
+          <div class="hint">
+            Tip: sleep tickets tussen kolommen (Kanban).
           </div>
         </div>
+      </aside>
 
-        <div class="weekdays glass-soft">
-          <div>Ma</div><div>Di</div><div>Wo</div><div>Do</div><div>Vr</div><div>Za</div><div>Zo</div>
-        </div>
+      <!-- Main -->
+      <section class="main">
 
-        <div id="calendarGrid" class="calendar-grid"></div>
-
-        <div class="legend glass-soft">
-          <div class="legend-item"><span class="swatch swatch-install"></span> Installatie</div>
-          <div class="legend-item"><span class="swatch swatch-leave"></span> Verlof</div>
-          <div class="legend-item"><span class="badge badge-temp">Tijdelijk</span></div>
-          <div class="legend-item"><span class="badge badge-def">Definitief</span></div>
-        </div>
-      </section>
-
-      <!-- TAB: Taken -->
-      <section id="tabTasks" class="tab-panel hidden">
-        <div class="toolbar glass-soft">
-          <div class="toolbar-left">
-            <div class="toolbar-title">Taken</div>
-            <div class="toolbar-sub" id="counter">0 taken</div>
-          </div>
-          <div class="toolbar-right">
-            <button id="clearDoneBtn" class="btn btn-ghost" type="button">Verwijder afgerond</button>
-          </div>
-        </div>
-
-        <form id="taskForm" class="task-create glass-soft">
-          <input id="taskInput" type="text" placeholder="Nieuwe taak..." autocomplete="off" />
-          <input id="taskNoteInput" type="text" placeholder="Notitie (optioneel)..." />
-          <input id="assigneeInput" type="email" placeholder="Toewijzen aan (email)..." list="assigneesList" />
-          <datalist id="assigneesList"></datalist>
-          <button type="submit" class="btn btn-primary">Toevoegen</button>
-        </form>
-
-        <div class="task-filters glass-soft">
-          <div class="filter-group">
-            <button type="button" class="filter-btn active" data-filter="all">Alle</button>
-            <button type="button" class="filter-btn" data-filter="open">Open</button>
-            <button type="button" class="filter-btn" data-filter="done">Afgerond</button>
+        <!-- LOGIN -->
+        <section id="loginCard" class="panel glass">
+          <div class="panel-head">
+            <div>
+              <div class="panel-title">Inloggen</div>
+              <div class="panel-sub">Beveiligde omgeving</div>
+            </div>
           </div>
 
-          <div class="filter-right">
-            <label class="mini">
-              Toegewezen aan
-              <select id="assigneeFilter" class="select">
-                <option value="__all__">Iedereen</option>
-              </select>
+          <form id="loginForm" class="stack">
+            <label class="field">
+              <span>E-mail</span>
+              <input id="emailInput" type="email" placeholder="naam@bedrijf.nl" autocomplete="username" required />
             </label>
-          </div>
-        </div>
 
-        <ul id="taskList" class="task-list"></ul>
+            <label class="field">
+              <span>Wachtwoord</span>
+              <input id="passwordInput" type="password" placeholder="••••••••" autocomplete="current-password" required />
+            </label>
+
+            <button class="btn btn-primary" type="submit">Inloggen</button>
+            <div id="loginError" class="hint error" aria-live="polite"></div>
+          </form>
+        </section>
+
+        <!-- APP -->
+        <section id="appCard" class="panel glass hidden">
+          <!-- View: Dashboard -->
+          <section id="viewDashboard" class="view">
+            <div class="view-head glass-soft">
+              <div>
+                <div class="view-title">Management Dashboard</div>
+                <div class="view-sub">Overzicht werkvoorraad, flow en belasting</div>
+              </div>
+            </div>
+
+            <div class="kpi-grid">
+              <div class="kpi glass-soft">
+                <div class="kpi-label">Open tickets</div>
+                <div class="kpi-value" id="kpiOpen">0</div>
+                <div class="kpi-sub" id="kpiOpenSub">—</div>
+              </div>
+
+              <div class="kpi glass-soft">
+                <div class="kpi-label">In uitvoering</div>
+                <div class="kpi-value" id="kpiDoing">0</div>
+                <div class="kpi-sub">Status: In uitvoering</div>
+              </div>
+
+              <div class="kpi glass-soft">
+                <div class="kpi-label">In planning</div>
+                <div class="kpi-value" id="kpiPlanning">0</div>
+                <div class="kpi-sub">Status: Planning</div>
+              </div>
+
+              <div class="kpi glass-soft">
+                <div class="kpi-label">Deze week afgerond</div>
+                <div class="kpi-value" id="kpiDoneWeek">0</div>
+                <div class="kpi-sub">Status: Afronding</div>
+              </div>
+            </div>
+
+            <div class="dash-grid">
+              <section class="panel-inner glass-soft">
+                <div class="panel-inner-head">
+                  <div class="panel-inner-title">Tickets per status</div>
+                  <div class="panel-inner-sub">Live telling (Kanban kolommen)</div>
+                </div>
+                <div id="statusBars" class="bars"></div>
+              </section>
+
+              <section class="panel-inner glass-soft">
+                <div class="panel-inner-head">
+                  <div class="panel-inner-title">Belasting (uren) per medewerker</div>
+                  <div class="panel-inner-sub">Som van estimatedHours voor Planning + In uitvoering</div>
+                </div>
+                <div id="loadBars" class="bars"></div>
+              </section>
+            </div>
+          </section>
+
+          <!-- View: Tickets -->
+          <section id="viewTickets" class="view hidden">
+            <div class="view-head glass-soft">
+              <div>
+                <div class="view-title">Tickets</div>
+                <div class="view-sub">Kanban + filters + ticket details</div>
+              </div>
+
+              <div class="view-actions">
+                <button id="newTicketBtn" class="btn btn-primary" type="button">+ Nieuw ticket</button>
+                <button id="toggleViewBtn" class="btn btn-ghost" type="button">Switch: Kanban</button>
+              </div>
+            </div>
+
+            <div class="filters glass-soft">
+              <label class="mini">
+                Zoeken
+                <input id="searchInput" type="text" placeholder="zoek op klant, order, titel..." />
+              </label>
+
+              <label class="mini">
+                Assignee
+                <select id="assigneeFilter" class="select">
+                  <option value="__all__">Iedereen</option>
+                </select>
+              </label>
+
+              <label class="mini">
+                Prioriteit
+                <select id="priorityFilter" class="select">
+                  <option value="__all__">Alles</option>
+                  <option value="normal">Normaal</option>
+                  <option value="high">Hoog</option>
+                  <option value="urgent">Spoed</option>
+                </select>
+              </label>
+
+              <label class="mini">
+                Type
+                <select id="typeFilter" class="select">
+                  <option value="__all__">Alles</option>
+                  <option value="install">Installatie</option>
+                  <option value="service">Service</option>
+                  <option value="internal">Intern</option>
+                  <option value="project">Project</option>
+                  <option value="parts">Parts</option>
+                  <option value="other">Overig</option>
+                </select>
+              </label>
+            </div>
+
+            <!-- Kanban -->
+            <section id="kanbanWrap" class="kanban"></section>
+
+            <!-- List -->
+            <section id="listWrap" class="list hidden">
+              <div class="table glass-soft">
+                <div class="row head">
+                  <div>Ticket</div>
+                  <div>Klant</div>
+                  <div>Order</div>
+                  <div>Status</div>
+                  <div>Assignee</div>
+                  <div>Prio</div>
+                  <div>Uren</div>
+                  <div></div>
+                </div>
+                <div id="listRows"></div>
+              </div>
+            </section>
+          </section>
+
+          <!-- View: Planning -->
+          <section id="viewPlanning" class="view hidden">
+            <div class="view-head glass-soft">
+              <div>
+                <div class="view-title">Planning & Belasting</div>
+                <div class="view-sub">Snelle planning-overzicht op basis van tickets + uren</div>
+              </div>
+            </div>
+
+            <div class="dash-grid">
+              <section class="panel-inner glass-soft">
+                <div class="panel-inner-head">
+                  <div class="panel-inner-title">Belasting per medewerker</div>
+                  <div class="panel-inner-sub">Planning + In uitvoering (estimatedHours)</div>
+                </div>
+                <div id="loadBarsPlanning" class="bars"></div>
+              </section>
+
+              <section class="panel-inner glass-soft">
+                <div class="panel-inner-head">
+                  <div class="panel-inner-title">Planning queue</div>
+                  <div class="panel-inner-sub">Tickets in status: Planning</div>
+                </div>
+                <ul id="planningQueue" class="queue"></ul>
+              </section>
+            </div>
+          </section>
+
+          <!-- View: Intake -->
+          <section id="viewIntake" class="view hidden">
+            <div class="view-head glass-soft">
+              <div>
+                <div class="view-title">Intake (Sales → Binnendienst)</div>
+                <div class="view-sub">Maak een overdracht-ticket met bijlagen via links</div>
+              </div>
+              <div class="view-actions">
+                <button id="intakeCreateBtn" class="btn btn-primary" type="button">Ticket aanmaken</button>
+              </div>
+            </div>
+
+            <section class="panel-inner glass-soft">
+              <form id="intakeForm" class="stack">
+                <div class="grid2">
+                  <label class="field">
+                    <span>Ordernummer</span>
+                    <input id="inOrderNo" type="text" placeholder="ORD-12345" required />
+                  </label>
+                  <label class="field">
+                    <span>Klantnaam</span>
+                    <input id="inCustomer" type="text" placeholder="Klant BV" required />
+                  </label>
+                </div>
+
+                <div class="grid2">
+                  <label class="field">
+                    <span>Project / Titel</span>
+                    <input id="inTitle" type="text" placeholder="Installatie overdracht – ..." required />
+                  </label>
+                  <label class="field">
+                    <span>Type</span>
+                    <select id="inType" class="select">
+                      <option value="project">Project</option>
+                      <option value="install">Installatie</option>
+                      <option value="service">Service</option>
+                      <option value="parts">Parts</option>
+                      <option value="internal">Intern</option>
+                      <option value="other">Overig</option>
+                    </select>
+                  </label>
+                </div>
+
+                <div class="grid2">
+                  <label class="field">
+                    <span>Prioriteit</span>
+                    <select id="inPriority" class="select">
+                      <option value="normal">Normaal</option>
+                      <option value="high">Hoog</option>
+                      <option value="urgent">Spoed</option>
+                    </select>
+                  </label>
+                  <label class="field">
+                    <span>Geschatte uren (binnendienst)</span>
+                    <input id="inHours" type="number" min="0" step="0.5" placeholder="Bijv. 2.5" />
+                  </label>
+                </div>
+
+                <label class="field">
+                  <span>Omschrijving / overdracht</span>
+                  <textarea id="inDesc" class="textarea" placeholder="Wat moet de binnendienst weten? Scope, risico’s, benodigdheden, planning constraints..." required></textarea>
+                </label>
+
+                <div class="glass-soft" style="padding:12px;">
+                  <div class="panel-inner-title" style="margin-bottom:8px;">Bijlagen links</div>
+                  <div class="hint" style="margin-bottom:10px;">
+                    Plak links naar foto’s/bestanden (Drive/OneDrive/SharePoint). Zorg dat collega’s toegang hebben.
+                  </div>
+
+                  <div class="grid2">
+                    <label class="field">
+                      <span>Naam bijlage</span>
+                      <input id="inLinkName" type="text" placeholder="Foto situatie / Offerte / Tekening" />
+                    </label>
+                    <label class="field">
+                      <span>Link (URL)</span>
+                      <input id="inLinkUrl" type="url" placeholder="https://..." />
+                    </label>
+                  </div>
+
+                  <div style="display:flex; gap:10px; flex-wrap:wrap;">
+                    <button id="inAddLinkBtn" class="btn btn-ghost" type="button">+ Link toevoegen</button>
+                    <button id="inClearLinksBtn" class="btn btn-ghost" type="button">Links leegmaken</button>
+                  </div>
+
+                  <div id="inLinksPreview" class="attachments" style="margin-top:10px;"></div>
+                </div>
+
+                <div id="intakeError" class="hint error" aria-live="polite"></div>
+                <div id="intakeOk" class="hint" aria-live="polite"></div>
+              </form>
+            </section>
+          </section>
+        </section>
       </section>
     </section>
 
     <footer class="footer">
-      <small>Interne omgeving</small>
+      <small>Interne omgeving — Dormatec</small>
     </footer>
-  </main>
 
-  <!-- Modal -->
-  <div id="modalBackdrop" class="modal-backdrop hidden"></div>
+    <!-- Modal (Ticket) -->
+    <div id="modalBackdrop" class="modal-backdrop hidden"></div>
 
-  <div id="eventModal" class="modal glass hidden" role="dialog" aria-modal="true">
-    <div class="modal-head">
-      <div class="modal-title" id="modalTitle">Planning</div>
-      <button id="closeModalBtn" class="btn btn-ghost" type="button">✕</button>
+    <div id="ticketModal" class="modal glass hidden" role="dialog" aria-modal="true">
+      <div class="modal-head">
+        <div class="modal-title" id="ticketModalTitle">Ticket</div>
+        <button id="closeModalBtn" class="btn btn-ghost" type="button">✕</button>
+      </div>
+
+      <form id="ticketForm" class="stack">
+        <div class="grid2">
+          <label class="field">
+            <span>Titel</span>
+            <input id="tTitle" type="text" placeholder="Bijv. Werkvoorbereiding project X" required />
+          </label>
+          <label class="field">
+            <span>Status</span>
+            <select id="tStatus" class="select"></select>
+          </label>
+        </div>
+
+        <div class="grid2">
+          <label class="field">
+            <span>Klantnaam</span>
+            <input id="tCustomer" type="text" placeholder="Klant BV" />
+          </label>
+          <label class="field">
+            <span>Ordernummer</span>
+            <input id="tOrder" type="text" placeholder="ORD-..." />
+          </label>
+        </div>
+
+        <div class="grid2">
+          <label class="field">
+            <span>Type</span>
+            <select id="tType" class="select">
+              <option value="project">Project</option>
+              <option value="install">Installatie</option>
+              <option value="service">Service</option>
+              <option value="parts">Parts</option>
+              <option value="internal">Intern</option>
+              <option value="other">Overig</option>
+            </select>
+          </label>
+          <label class="field">
+            <span>Prioriteit</span>
+            <select id="tPriority" class="select">
+              <option value="normal">Normaal</option>
+              <option value="high">Hoog</option>
+              <option value="urgent">Spoed</option>
+            </select>
+          </label>
+        </div>
+
+        <div class="grid2">
+          <label class="field">
+            <span>Assignee (email)</span>
+            <input id="tAssignee" type="email" placeholder="collega@dormatec.eu" />
+          </label>
+          <label class="field">
+            <span>Estimated uren</span>
+            <input id="tHours" type="number" min="0" step="0.5" placeholder="Bijv. 1.5" />
+          </label>
+        </div>
+
+        <label class="field">
+          <span>Omschrijving</span>
+          <textarea id="tDesc" class="textarea" placeholder="Wat is er aan de hand / wat moet er gebeuren?" required></textarea>
+        </label>
+
+        <label class="field">
+          <span>Interne notities</span>
+          <textarea id="tInternal" class="textarea" placeholder="Binnendienst notities (beslissingen, klantcontact, risico’s)"></textarea>
+        </label>
+
+        <div class="glass-soft" style="padding:12px;">
+          <div class="panel-inner-title" style="margin-bottom:8px;">Bijlagen links</div>
+
+          <div class="grid2">
+            <label class="field">
+              <span>Naam bijlage</span>
+              <input id="tLinkName" type="text" placeholder="Tekening / Foto / Doc" />
+            </label>
+            <label class="field">
+              <span>Link (URL)</span>
+              <input id="tLinkUrl" type="url" placeholder="https://..." />
+            </label>
+          </div>
+
+          <div style="display:flex; gap:10px; flex-wrap:wrap;">
+            <button id="tAddLinkBtn" class="btn btn-ghost" type="button">+ Link toevoegen</button>
+            <button id="tClearLinksBtn" class="btn btn-ghost" type="button">Links leegmaken</button>
+          </div>
+
+          <div id="tLinksPreview" class="attachments" style="margin-top:10px;"></div>
+        </div>
+
+        <div id="ticketError" class="hint error" aria-live="polite"></div>
+
+        <div class="modal-actions">
+          <button class="btn btn-primary" type="submit">Opslaan</button>
+          <button id="deleteTicketBtn" class="btn btn-ghost" type="button">Verwijderen</button>
+          <button id="cancelModalBtn" class="btn btn-ghost" type="button">Annuleren</button>
+        </div>
+      </form>
     </div>
 
-    <form id="eventForm" class="stack">
-      <label class="field">
-        <span>Type</span>
-        <select id="eventType" class="select">
-          <option value="install">Installatie</option>
-          <option value="leave">Verlof</option>
-        </select>
-      </label>
-
-      <label class="field">
-        <span>Monteur / collega</span>
-        <input id="techInput" type="text" placeholder="Bijv. Jan Jansen" required />
-      </label>
-
-      <label class="field" id="orderWrap">
-        <span>Ordernummer</span>
-        <input id="orderInput" type="text" placeholder="Bijv. ORD-12345" />
-      </label>
-
-      <label class="field">
-        <span>Notities</span>
-        <textarea id="eventNotes" class="textarea" placeholder="Bijv. toegang, contactpersoon, bijzonderheden..."></textarea>
-      </label>
-
-      <div class="grid2">
-        <label class="field">
-          <span>Begin datum</span>
-          <input id="startDate" type="date" required />
-        </label>
-        <label class="field">
-          <span>Begin tijd</span>
-          <input id="startTime" type="time" required />
-        </label>
-      </div>
-
-      <div class="grid2">
-        <label class="field">
-          <span>Eind datum</span>
-          <input id="endDate" type="date" required />
-        </label>
-        <label class="field">
-          <span>Eind tijd</span>
-          <input id="endTime" type="time" required />
-        </label>
-      </div>
-
-      <label class="field">
-        <span>Status</span>
-        <select id="statusSelect" class="select">
-          <option value="temp">Tijdelijk</option>
-          <option value="def">Definitief</option>
-        </select>
-      </label>
-
-      <div id="eventError" class="hint error" aria-live="polite"></div>
-
-      <div class="modal-actions">
-        <button class="btn btn-primary" type="submit">Opslaan</button>
-        <button id="cancelModalBtn" class="btn btn-ghost" type="button">Annuleren</button>
-      </div>
-    </form>
-  </div>
+  </main>
 
   <script type="module" src="app.js"></script>
 </body>
