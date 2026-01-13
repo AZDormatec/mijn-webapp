@@ -7,441 +7,335 @@
   <link rel="stylesheet" href="styles.css" />
 </head>
 <body>
-  <main class="app-shell">
+  <div class="app-shell">
     <!-- Topbar -->
     <header class="topbar glass">
       <div class="brand">
-        <img class="brand-logo" src="assets/logo.png" alt="Dormatec logo" />
-        <div class="brand-text">
-          <div class="brand-title">Dormatec</div>
-          <div class="brand-sub">Service Desk • Planning • Dashboard</div>
+        <img src="logo.png" alt="Dormatec" class="brand__logo" />
+        <div class="brand__text">
+          <div class="brand__title">Dormatec</div>
+          <div class="brand__subtitle">Service Desk · Tickets · Agenda · Planning · Dashboard</div>
         </div>
       </div>
 
-      <div class="topbar-right">
-        <div class="user-pill" id="userInfo">Niet ingelogd</div>
-        <button id="logoutBtn" class="btn btn-ghost" type="button">Uitloggen</button>
+      <div class="topbar__right">
+        <div class="pill">
+          <span class="dot dot--ok"></span>
+          <span id="whoami">Ingelogd: iedereen</span>
+        </div>
+        <button class="btn btn--ghost" id="btnExport">Export</button>
+        <button class="btn btn--ghost" id="btnReset">Reset demo</button>
       </div>
     </header>
 
-    <!-- Layout -->
-    <section class="layout">
+    <div class="layout">
       <!-- Sidebar -->
       <aside class="sidebar glass">
-        <button class="nav-btn active" data-view="dashboard">
-          <span class="nav-dot"></span> Dashboard
-        </button>
-        <button class="nav-btn" data-view="tickets">
-          <span class="nav-dot"></span> Tickets
-        </button>
-        <button class="nav-btn" data-view="planning">
-          <span class="nav-dot"></span> Planning & Belasting
-        </button>
-        <button class="nav-btn" data-view="intake">
-          <span class="nav-dot"></span> Intake (Sales → Binnendienst)
-        </button>
+        <nav class="nav">
+          <button class="nav__item is-active" data-view="dashboard">
+            <span class="nav__icon"></span><span>Dashboard</span>
+          </button>
+          <button class="nav__item" data-view="tickets">
+            <span class="nav__icon"></span><span>Tickets</span>
+          </button>
+          <button class="nav__item" data-view="agenda">
+            <span class="nav__icon"></span><span>Agenda</span>
+          </button>
+          <button class="nav__item" data-view="planning">
+            <span class="nav__icon"></span><span>Planning & Belasting</span>
+          </button>
+          <button class="nav__item" data-view="intake">
+            <span class="nav__icon"></span><span>Intake (Sales → Binnendienst)</span>
+          </button>
+        </nav>
 
-        <div class="sidebar-foot">
-          <div class="hint">
-            Tip: sleep tickets tussen kolommen (Kanban).
+        <div class="sidebar__hint">
+          <div class="hint__title">Tip</div>
+          <div class="hint__text">
+            Tickets in <b>Planning</b> met data/monteur worden automatisch zichtbaar in de <b>Agenda</b>.
+            Klik agenda-items om te wijzigen.
           </div>
         </div>
       </aside>
 
       <!-- Main -->
-      <section class="main">
-
-        <!-- LOGIN -->
-        <section id="loginCard" class="panel glass">
-          <div class="panel-head">
+      <main class="main">
+        <!-- DASHBOARD -->
+        <section class="view" id="view-dashboard">
+          <div class="page-header glass">
             <div>
-              <div class="panel-title">Inloggen</div>
-              <div class="panel-sub">Beveiligde omgeving</div>
+              <h1>Management Dashboard</h1>
+              <p>Overzicht werkvoorraad, flow en belasting</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn--primary" id="btnNewTicketDash">+ Nieuw ticket</button>
             </div>
           </div>
 
-          <form id="loginForm" class="stack">
-            <label class="field">
-              <span>E-mail</span>
-              <input id="emailInput" type="email" placeholder="naam@bedrijf.nl" autocomplete="username" required />
-            </label>
+          <div class="grid grid--3">
+            <div class="card glass">
+              <div class="card__title">Open tickets</div>
+              <div class="kpi">
+                <div class="kpi__value" id="kpiOpen">0</div>
+                <div class="kpi__meta">Totaal niet-afgerond</div>
+              </div>
+            </div>
 
-            <label class="field">
-              <span>Wachtwoord</span>
-              <input id="passwordInput" type="password" placeholder="••••••••" autocomplete="current-password" required />
-            </label>
+            <div class="card glass">
+              <div class="card__title">In uitvoering</div>
+              <div class="kpi">
+                <div class="kpi__value" id="kpiDoing">0</div>
+                <div class="kpi__meta">Status: In uitvoering</div>
+              </div>
+            </div>
 
-            <button class="btn btn-primary" type="submit">Inloggen</button>
-            <div id="loginError" class="hint error" aria-live="polite"></div>
-          </form>
+            <div class="card glass">
+              <div class="card__title">Deze week afronding</div>
+              <div class="kpi">
+                <div class="kpi__value" id="kpiClosing">0</div>
+                <div class="kpi__meta">Status: Afronding (7 dagen)</div>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid--2">
+            <div class="card glass">
+              <div class="card__title">Tickets per status</div>
+              <div class="bars" id="statusBars"></div>
+            </div>
+
+            <div class="card glass">
+              <div class="card__title">Belasting (uren) per medewerker</div>
+              <div class="muted">Som van estimatedHours voor Planning + In uitvoering</div>
+              <div class="bars" id="workloadBars"></div>
+            </div>
+          </div>
         </section>
 
-        <!-- APP -->
-        <section id="appCard" class="panel glass hidden">
-          <!-- View: Dashboard -->
-          <section id="viewDashboard" class="view">
-            <div class="view-head glass-soft">
-              <div>
-                <div class="view-title">Management Dashboard</div>
-                <div class="view-sub">Overzicht werkvoorraad, flow en belasting</div>
-              </div>
+        <!-- TICKETS -->
+        <section class="view is-hidden" id="view-tickets">
+          <div class="page-header glass">
+            <div>
+              <h1>Tickets</h1>
+              <p>Kanban · filters · project-doorloop velden</p>
             </div>
-
-            <div class="kpi-grid">
-              <div class="kpi glass-soft">
-                <div class="kpi-label">Open tickets</div>
-                <div class="kpi-value" id="kpiOpen">0</div>
-                <div class="kpi-sub" id="kpiOpenSub">—</div>
-              </div>
-
-              <div class="kpi glass-soft">
-                <div class="kpi-label">In uitvoering</div>
-                <div class="kpi-value" id="kpiDoing">0</div>
-                <div class="kpi-sub">Status: In uitvoering</div>
-              </div>
-
-              <div class="kpi glass-soft">
-                <div class="kpi-label">In planning</div>
-                <div class="kpi-value" id="kpiPlanning">0</div>
-                <div class="kpi-sub">Status: Planning</div>
-              </div>
-
-              <div class="kpi glass-soft">
-                <div class="kpi-label">Deze week afgerond</div>
-                <div class="kpi-value" id="kpiDoneWeek">0</div>
-                <div class="kpi-sub">Status: Afronding</div>
-              </div>
+            <div class="actions">
+              <button class="btn btn--primary" id="btnNewTicket">+ Nieuw ticket</button>
+              <button class="btn btn--ghost" id="btnSwitchView">Switch: Kanban</button>
             </div>
+          </div>
 
-            <div class="dash-grid">
-              <section class="panel-inner glass-soft">
-                <div class="panel-inner-head">
-                  <div class="panel-inner-title">Tickets per status</div>
-                  <div class="panel-inner-sub">Live telling (Kanban kolommen)</div>
-                </div>
-                <div id="statusBars" class="bars"></div>
-              </section>
-
-              <section class="panel-inner glass-soft">
-                <div class="panel-inner-head">
-                  <div class="panel-inner-title">Belasting (uren) per medewerker</div>
-                  <div class="panel-inner-sub">Som van estimatedHours voor Planning + In uitvoering</div>
-                </div>
-                <div id="loadBars" class="bars"></div>
-              </section>
+          <div class="filters glass">
+            <div class="field">
+              <label>Zoeken</label>
+              <input id="qSearch" type="text" placeholder="zoek op klant, order, titel, notitie..." />
             </div>
-          </section>
-
-          <!-- View: Tickets -->
-          <section id="viewTickets" class="view hidden">
-            <div class="view-head glass-soft">
-              <div>
-                <div class="view-title">Tickets</div>
-                <div class="view-sub">Kanban + filters + ticket details</div>
-              </div>
-
-              <div class="view-actions">
-                <button id="newTicketBtn" class="btn btn-primary" type="button">+ Nieuw ticket</button>
-                <button id="toggleViewBtn" class="btn btn-ghost" type="button">Switch: Kanban</button>
-              </div>
+            <div class="field">
+              <label>Assignee</label>
+              <select id="qAssignee"></select>
             </div>
-
-            <div class="filters glass-soft">
-              <label class="mini">
-                Zoeken
-                <input id="searchInput" type="text" placeholder="zoek op klant, order, titel..." />
-              </label>
-
-              <label class="mini">
-                Assignee
-                <select id="assigneeFilter" class="select">
-                  <option value="__all__">Iedereen</option>
-                </select>
-              </label>
-
-              <label class="mini">
-                Prioriteit
-                <select id="priorityFilter" class="select">
-                  <option value="__all__">Alles</option>
-                  <option value="normal">Normaal</option>
-                  <option value="high">Hoog</option>
-                  <option value="urgent">Spoed</option>
-                </select>
-              </label>
-
-              <label class="mini">
-                Type
-                <select id="typeFilter" class="select">
-                  <option value="__all__">Alles</option>
-                  <option value="install">Installatie</option>
-                  <option value="service">Service</option>
-                  <option value="internal">Intern</option>
-                  <option value="project">Project</option>
-                  <option value="parts">Parts</option>
-                  <option value="other">Overig</option>
-                </select>
-              </label>
+            <div class="field">
+              <label>Prioriteit</label>
+              <select id="qPriority">
+                <option value="">Alles</option>
+                <option value="Laag">Laag</option>
+                <option value="Normaal">Normaal</option>
+                <option value="Hoog">Hoog</option>
+                <option value="Spoed">Spoed</option>
+              </select>
             </div>
-
-            <!-- Kanban -->
-            <section id="kanbanWrap" class="kanban"></section>
-
-            <!-- List -->
-            <section id="listWrap" class="list hidden">
-              <div class="table glass-soft">
-                <div class="row head">
-                  <div>Ticket</div>
-                  <div>Klant</div>
-                  <div>Order</div>
-                  <div>Status</div>
-                  <div>Assignee</div>
-                  <div>Prio</div>
-                  <div>Uren</div>
-                  <div></div>
-                </div>
-                <div id="listRows"></div>
-              </div>
-            </section>
-          </section>
-
-          <!-- View: Planning -->
-          <section id="viewPlanning" class="view hidden">
-            <div class="view-head glass-soft">
-              <div>
-                <div class="view-title">Planning & Belasting</div>
-                <div class="view-sub">Snelle planning-overzicht op basis van tickets + uren</div>
-              </div>
+            <div class="field">
+              <label>Type</label>
+              <select id="qType">
+                <option value="">Alles</option>
+                <option value="Storing">Storing</option>
+                <option value="Installatie">Installatie</option>
+                <option value="Project">Project</option>
+                <option value="Intern">Intern</option>
+                <option value="Overig">Overig</option>
+              </select>
             </div>
+          </div>
 
-            <div class="dash-grid">
-              <section class="panel-inner glass-soft">
-                <div class="panel-inner-head">
-                  <div class="panel-inner-title">Belasting per medewerker</div>
-                  <div class="panel-inner-sub">Planning + In uitvoering (estimatedHours)</div>
-                </div>
-                <div id="loadBarsPlanning" class="bars"></div>
-              </section>
-
-              <section class="panel-inner glass-soft">
-                <div class="panel-inner-head">
-                  <div class="panel-inner-title">Planning queue</div>
-                  <div class="panel-inner-sub">Tickets in status: Planning</div>
-                </div>
-                <ul id="planningQueue" class="queue"></ul>
-              </section>
-            </div>
-          </section>
-
-          <!-- View: Intake -->
-          <section id="viewIntake" class="view hidden">
-            <div class="view-head glass-soft">
-              <div>
-                <div class="view-title">Intake (Sales → Binnendienst)</div>
-                <div class="view-sub">Maak een overdracht-ticket met bijlagen via links</div>
-              </div>
-              <div class="view-actions">
-                <button id="intakeCreateBtn" class="btn btn-primary" type="button">Ticket aanmaken</button>
-              </div>
-            </div>
-
-            <section class="panel-inner glass-soft">
-              <form id="intakeForm" class="stack">
-                <div class="grid2">
-                  <label class="field">
-                    <span>Ordernummer</span>
-                    <input id="inOrderNo" type="text" placeholder="ORD-12345" required />
-                  </label>
-                  <label class="field">
-                    <span>Klantnaam</span>
-                    <input id="inCustomer" type="text" placeholder="Klant BV" required />
-                  </label>
-                </div>
-
-                <div class="grid2">
-                  <label class="field">
-                    <span>Project / Titel</span>
-                    <input id="inTitle" type="text" placeholder="Installatie overdracht – ..." required />
-                  </label>
-                  <label class="field">
-                    <span>Type</span>
-                    <select id="inType" class="select">
-                      <option value="project">Project</option>
-                      <option value="install">Installatie</option>
-                      <option value="service">Service</option>
-                      <option value="parts">Parts</option>
-                      <option value="internal">Intern</option>
-                      <option value="other">Overig</option>
-                    </select>
-                  </label>
-                </div>
-
-                <div class="grid2">
-                  <label class="field">
-                    <span>Prioriteit</span>
-                    <select id="inPriority" class="select">
-                      <option value="normal">Normaal</option>
-                      <option value="high">Hoog</option>
-                      <option value="urgent">Spoed</option>
-                    </select>
-                  </label>
-                  <label class="field">
-                    <span>Geschatte uren (binnendienst)</span>
-                    <input id="inHours" type="number" min="0" step="0.5" placeholder="Bijv. 2.5" />
-                  </label>
-                </div>
-
-                <label class="field">
-                  <span>Omschrijving / overdracht</span>
-                  <textarea id="inDesc" class="textarea" placeholder="Wat moet de binnendienst weten? Scope, risico’s, benodigdheden, planning constraints..." required></textarea>
-                </label>
-
-                <div class="glass-soft" style="padding:12px;">
-                  <div class="panel-inner-title" style="margin-bottom:8px;">Bijlagen links</div>
-                  <div class="hint" style="margin-bottom:10px;">
-                    Plak links naar foto’s/bestanden (Drive/OneDrive/SharePoint). Zorg dat collega’s toegang hebben.
-                  </div>
-
-                  <div class="grid2">
-                    <label class="field">
-                      <span>Naam bijlage</span>
-                      <input id="inLinkName" type="text" placeholder="Foto situatie / Offerte / Tekening" />
-                    </label>
-                    <label class="field">
-                      <span>Link (URL)</span>
-                      <input id="inLinkUrl" type="url" placeholder="https://..." />
-                    </label>
-                  </div>
-
-                  <div style="display:flex; gap:10px; flex-wrap:wrap;">
-                    <button id="inAddLinkBtn" class="btn btn-ghost" type="button">+ Link toevoegen</button>
-                    <button id="inClearLinksBtn" class="btn btn-ghost" type="button">Links leegmaken</button>
-                  </div>
-
-                  <div id="inLinksPreview" class="attachments" style="margin-top:10px;"></div>
-                </div>
-
-                <div id="intakeError" class="hint error" aria-live="polite"></div>
-                <div id="intakeOk" class="hint" aria-live="polite"></div>
-              </form>
-            </section>
-          </section>
+          <div class="kanban-wrap glass">
+            <div class="kanban" id="kanban"></div>
+          </div>
         </section>
-      </section>
-    </section>
 
-    <footer class="footer">
-      <small>Interne omgeving — Dormatec</small>
-    </footer>
-
-    <!-- Modal (Ticket) -->
-    <div id="modalBackdrop" class="modal-backdrop hidden"></div>
-
-    <div id="ticketModal" class="modal glass hidden" role="dialog" aria-modal="true">
-      <div class="modal-head">
-        <div class="modal-title" id="ticketModalTitle">Ticket</div>
-        <button id="closeModalBtn" class="btn btn-ghost" type="button">✕</button>
-      </div>
-
-      <form id="ticketForm" class="stack">
-        <div class="grid2">
-          <label class="field">
-            <span>Titel</span>
-            <input id="tTitle" type="text" placeholder="Bijv. Werkvoorbereiding project X" required />
-          </label>
-          <label class="field">
-            <span>Status</span>
-            <select id="tStatus" class="select"></select>
-          </label>
-        </div>
-
-        <div class="grid2">
-          <label class="field">
-            <span>Klantnaam</span>
-            <input id="tCustomer" type="text" placeholder="Klant BV" />
-          </label>
-          <label class="field">
-            <span>Ordernummer</span>
-            <input id="tOrder" type="text" placeholder="ORD-..." />
-          </label>
-        </div>
-
-        <div class="grid2">
-          <label class="field">
-            <span>Type</span>
-            <select id="tType" class="select">
-              <option value="project">Project</option>
-              <option value="install">Installatie</option>
-              <option value="service">Service</option>
-              <option value="parts">Parts</option>
-              <option value="internal">Intern</option>
-              <option value="other">Overig</option>
-            </select>
-          </label>
-          <label class="field">
-            <span>Prioriteit</span>
-            <select id="tPriority" class="select">
-              <option value="normal">Normaal</option>
-              <option value="high">Hoog</option>
-              <option value="urgent">Spoed</option>
-            </select>
-          </label>
-        </div>
-
-        <div class="grid2">
-          <label class="field">
-            <span>Assignee (email)</span>
-            <input id="tAssignee" type="email" placeholder="collega@dormatec.eu" />
-          </label>
-          <label class="field">
-            <span>Estimated uren</span>
-            <input id="tHours" type="number" min="0" step="0.5" placeholder="Bijv. 1.5" />
-          </label>
-        </div>
-
-        <label class="field">
-          <span>Omschrijving</span>
-          <textarea id="tDesc" class="textarea" placeholder="Wat is er aan de hand / wat moet er gebeuren?" required></textarea>
-        </label>
-
-        <label class="field">
-          <span>Interne notities</span>
-          <textarea id="tInternal" class="textarea" placeholder="Binnendienst notities (beslissingen, klantcontact, risico’s)"></textarea>
-        </label>
-
-        <div class="glass-soft" style="padding:12px;">
-          <div class="panel-inner-title" style="margin-bottom:8px;">Bijlagen links</div>
-
-          <div class="grid2">
-            <label class="field">
-              <span>Naam bijlage</span>
-              <input id="tLinkName" type="text" placeholder="Tekening / Foto / Doc" />
-            </label>
-            <label class="field">
-              <span>Link (URL)</span>
-              <input id="tLinkUrl" type="url" placeholder="https://..." />
-            </label>
+        <!-- AGENDA -->
+        <section class="view is-hidden" id="view-agenda">
+          <div class="page-header glass">
+            <div>
+              <h1>Agenda</h1>
+              <p>Installaties + verlof · ticket-linked items komen uit Ticket Planning</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn--primary" id="btnAddAgenda">+ Toevoegen</button>
+            </div>
           </div>
 
-          <div style="display:flex; gap:10px; flex-wrap:wrap;">
-            <button id="tAddLinkBtn" class="btn btn-ghost" type="button">+ Link toevoegen</button>
-            <button id="tClearLinksBtn" class="btn btn-ghost" type="button">Links leegmaken</button>
+          <div class="grid grid--2">
+            <div class="card glass">
+              <div class="calendar-head">
+                <button class="btn btn--ghost btn--icon" id="calPrev" aria-label="Vorige maand">‹</button>
+                <div class="calendar-head__title" id="calTitle">—</div>
+                <button class="btn btn--ghost btn--icon" id="calNext" aria-label="Volgende maand">›</button>
+              </div>
+
+              <div class="calendar">
+                <div class="calendar__dow">
+                  <div>Ma</div><div>Di</div><div>Wo</div><div>Do</div><div>Vr</div><div>Za</div><div>Zo</div>
+                </div>
+                <div class="calendar__grid" id="calGrid"></div>
+              </div>
+            </div>
+
+            <div class="card glass">
+              <div class="card__title">Legenda</div>
+              <div class="legend">
+                <div class="legend__row">
+                  <span class="badge badge--install">Installatie</span>
+                  <span class="muted">Werk gepland op klantlocatie</span>
+                </div>
+                <div class="legend__row">
+                  <span class="badge badge--leave">Verlof</span>
+                  <span class="muted">Afwezigheid zichtbaar voor iedereen</span>
+                </div>
+                <div class="legend__row">
+                  <span class="badge badge--temp">Tijdelijk</span>
+                  <span class="muted">Voorlopige planning</span>
+                </div>
+                <div class="legend__row">
+                  <span class="badge badge--fixed">Definitief</span>
+                  <span class="muted">Bevestigde planning</span>
+                </div>
+                <div class="legend__row">
+                  <span class="badge badge--ticket">Ticket</span>
+                  <span class="muted">Automatisch vanuit ticket in Planning</span>
+                </div>
+              </div>
+
+              <div class="divider"></div>
+
+              <div class="card__title">Items op geselecteerde dag</div>
+              <div class="muted" id="dayHint">Klik in de kalender om items te zien.</div>
+              <div class="daylist" id="dayList"></div>
+            </div>
+          </div>
+        </section>
+
+        <!-- PLANNING -->
+        <section class="view is-hidden" id="view-planning">
+          <div class="page-header glass">
+            <div>
+              <h1>Planning & Belasting</h1>
+              <p>Belasting op basis van tickets + uren</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn--ghost" id="btnFocusPlanning">Toon tickets in Planning</button>
+            </div>
           </div>
 
-          <div id="tLinksPreview" class="attachments" style="margin-top:10px;"></div>
-        </div>
+          <div class="grid grid--2">
+            <div class="card glass">
+              <div class="card__title">Belasting per medewerker</div>
+              <div class="muted">Planning + In uitvoering (estimatedHours)</div>
+              <div class="bars" id="workloadBars2"></div>
+            </div>
 
-        <div id="ticketError" class="hint error" aria-live="polite"></div>
+            <div class="card glass">
+              <div class="card__title">Planning queue</div>
+              <div class="muted">Tickets in status: Planning</div>
+              <div class="queue" id="planningQueue"></div>
+            </div>
+          </div>
+        </section>
 
-        <div class="modal-actions">
-          <button class="btn btn-primary" type="submit">Opslaan</button>
-          <button id="deleteTicketBtn" class="btn btn-ghost" type="button">Verwijderen</button>
-          <button id="cancelModalBtn" class="btn btn-ghost" type="button">Annuleren</button>
-        </div>
-      </form>
+        <!-- INTAKE -->
+        <section class="view is-hidden" id="view-intake">
+          <div class="page-header glass">
+            <div>
+              <h1>Intake (Sales → Binnendienst)</h1>
+              <p>Overdrachtsportal: maak een ticket met volledige projectinput</p>
+            </div>
+            <div class="actions">
+              <button class="btn btn--primary" id="btnCreateFromIntake">Maak intake ticket</button>
+            </div>
+          </div>
+
+          <div class="card glass">
+            <div class="form-grid">
+              <div class="field">
+                <label>Klantnaam</label>
+                <input id="inCustomer" type="text" placeholder="bijv. KLM" />
+              </div>
+              <div class="field">
+                <label>Ordernummer</label>
+                <input id="inOrder" type="text" placeholder="bijv. 12345" />
+              </div>
+              <div class="field">
+                <label>Type</label>
+                <select id="inType">
+                  <option value="Installatie">Installatie</option>
+                  <option value="Project">Project</option>
+                  <option value="Storing">Storing</option>
+                  <option value="Intern">Intern</option>
+                  <option value="Overig">Overig</option>
+                </select>
+              </div>
+              <div class="field">
+                <label>Prioriteit</label>
+                <select id="inPriority">
+                  <option value="Normaal">Normaal</option>
+                  <option value="Laag">Laag</option>
+                  <option value="Hoog">Hoog</option>
+                  <option value="Spoed">Spoed</option>
+                </select>
+              </div>
+
+              <div class="field field--full">
+                <label>Titel / onderwerp</label>
+                <input id="inTitle" type="text" placeholder="Korte omschrijving van de opdracht" />
+              </div>
+
+              <div class="field field--full">
+                <label>Sales notities / overdracht</label>
+                <textarea id="inNotes" rows="7" placeholder="Belangrijke info, scope, contactpersonen, bijzonderheden..."></textarea>
+              </div>
+
+              <div class="field">
+                <label>Gewenste startdatum</label>
+                <input id="inStart" type="date" />
+              </div>
+              <div class="field">
+                <label>Gewenste einddatum</label>
+                <input id="inEnd" type="date" />
+              </div>
+            </div>
+          </div>
+        </section>
+      </main>
     </div>
 
-  </main>
+    <!-- Modal root -->
+    <div class="overlay is-hidden" id="overlay"></div>
+    <div class="modal is-hidden" id="modal">
+      <div class="modal__card glass">
+        <div class="modal__head">
+          <div>
+            <div class="modal__title" id="modalTitle">—</div>
+            <div class="modal__subtitle" id="modalSubtitle">—</div>
+          </div>
+          <button class="btn btn--ghost btn--icon" id="modalClose" aria-label="Sluiten">✕</button>
+        </div>
+        <div class="modal__body" id="modalBody"></div>
+        <div class="modal__foot" id="modalFoot"></div>
+      </div>
+    </div>
 
-  <script type="module" src="app.js"></script>
+    <div class="toast-wrap" id="toastWrap"></div>
+  </div>
+
+  <script src="app.js"></script>
 </body>
 </html>
